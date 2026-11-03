@@ -34,6 +34,7 @@ DROP = [
     r'/ Panasonic GX-H15A$',
     r'/ Chain_Anchor_3_Hole[^/]*$',
     r'/ XY Cable Chain Bridge - 3 Hole$',
+    r'/ Front_Skirt_Logo$',                             # alternative to the Mini12864 display (same spot)
 ]
 DROP = [re.compile(p) for p in DROP]
 dropped = collections.Counter()
