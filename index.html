@@ -45,6 +45,11 @@
   .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
   .row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: 13px; color: var(--muted); }
   .btn { font: inherit; font-size: 13px; border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+  .fav-add { display: flex; gap: 6px; margin-bottom: 8px; }
+  .fav-add input { flex: 1; min-width: 0; font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--fg); }
+  .fav { display: grid; grid-template-columns: minmax(0, 1fr) 34px; gap: 6px; }
+  .fav-del { font: inherit; font-size: 18px; line-height: 1; background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+  .fav-del:hover { color: var(--fg); border-color: var(--muted); }
   main { position: relative; min-width: 0; }
   canvas { display: block; width: 100%; height: 100%; }
   #loader { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; }
@@ -70,6 +75,16 @@
     <h1>Voron Color Preview</h1>
     <p class="fine">Model: official Voron 2.4r2 CAD by <a href="https://github.com/VoronDesign/Voron-2">Voron Design</a> (GPL-3.0). Also see the <a href="palettes.html">2D palette board</a>.</p>
   </div>
+
+  <section>
+    <h2>Favorites</h2>
+    <form class="fav-add" id="fav-form">
+      <input type="text" id="fav-name" maxlength="40" aria-label="Favorite name">
+      <button class="btn" type="submit">Save</button>
+    </form>
+    <div class="presets" id="favorites"></div>
+    <p class="fine" id="fav-empty">Save the current colors to come back to them later. Favorites are stored in this browser.</p>
+  </section>
 
   <section>
     <h2>Palettes</h2>
@@ -310,7 +325,53 @@ function apply() {
   renderUI();
 }
 
+// Favorites: [{ name, c: [primary, accent, chains, frame] }], newest first, kept in localStorage.
+const FAV_KEY = 'voron-favorites';
+const isHex = c => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
+let favorites = [];
+try {
+  const raw = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+  if (Array.isArray(raw)) favorites = raw.filter(f => f && typeof f.name === 'string' && Array.isArray(f.c) && f.c.length === 4 && f.c.every(isHex));
+} catch (e) {}
+function saveFavorites() { try { localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); } catch (e) {} }
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const sameColors = (a, b) => a.every((c, i) => c.toLowerCase() === b[i].toLowerCase());
+
+function renderFavorites() {
+  const el = document.getElementById('favorites');
+  el.innerHTML = favorites.map((f, i) => `
+    <div class="fav">
+      <button class="preset" data-fav="${i}" aria-pressed="${sameColors(f.c, state.colors)}">
+        <span>${esc(f.name)}</span>
+        <span class="bar">${f.c.map(c => `<span style="flex:1;background:${c}"></span>`).join('')}</span>
+      </button>
+      <button class="fav-del" data-del="${i}" title="Remove" aria-label="Remove ${esc(f.name)}">×</button>
+    </div>`).join('');
+  document.getElementById('fav-empty').hidden = favorites.length > 0;
+  el.querySelectorAll('[data-fav]').forEach(b => b.onclick = () => {
+    state.colors = favorites[+b.dataset.fav].c.slice();
+    state.preset = PRESETS.findIndex(p => sameColors(p.c, state.colors));
+    apply();
+  });
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    favorites.splice(+b.dataset.del, 1); saveFavorites(); renderFavorites();
+  });
+  document.getElementById('fav-name').placeholder = state.preset >= 0 ? PRESETS[state.preset].name : 'My colors';
+}
+
+document.getElementById('fav-form').onsubmit = e => {
+  e.preventDefault();
+  const input = document.getElementById('fav-name');
+  const name = input.value.trim() || input.placeholder;
+  const existing = favorites.findIndex(f => sameColors(f.c, state.colors));
+  if (existing >= 0) favorites[existing].name = name; // same colors again: rename instead of duplicating
+  else favorites.unshift({ name, c: state.colors.slice() });
+  input.value = '';
+  saveFavorites(); renderFavorites();
+};
+
 function renderUI() {
+  renderFavorites();
   document.getElementById('presets').innerHTML = PRESETS.map((p, i) => `
     ${i === 0 || PRESETS[i - 1].group !== p.group ? `<h3 class="group">${p.group}</h3>` : ''}
     <button class="preset" data-i="${i}" aria-pressed="${state.preset === i}">
@@ -318,7 +379,7 @@ function renderUI() {
       <span class="bar">${p.c.slice(0, 3).map((c, j) => `<span style="flex:${[6, 3, 1][j]};background:${c}"></span>`).join('')}</span>
       <small>${p.note}</small>
     </button>`).join('');
-  document.querySelectorAll('.preset').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#presets .preset').forEach(b => b.onclick = () => {
     state.preset = +b.dataset.i; state.colors = PRESETS[state.preset].c.slice(); apply();
   });
   document.getElementById('roles').innerHTML = ROLES.map((r, i) => `
@@ -343,7 +404,8 @@ function setColor(i, v) {
   mats[ROLES[i].key].color.set(v);
   document.getElementById(`pick-${i}`).value = v;
   document.getElementById(`hex-${i}`).value = v;
-  document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  document.querySelectorAll('#presets .preset').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  renderFavorites();
 }
 
 document.querySelectorAll('.seg').forEach(g => g.addEventListener('click', e => {
