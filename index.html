@@ -7,7 +7,7 @@
 <style>
   :root {
     --bg: #eef1f0; --panel: #ffffff; --fg: #142019; --muted: #56635e; --line: #d3dbd8; --ink: #007457;
-    --heart: #e0456a; --heart-bg: rgba(224, 69, 106, .1);
+    --heart: #e0456a; --heart-bg: rgba(224, 69, 106, .1); --ink-bg: rgba(0, 116, 87, .09);
     color-scheme: light;
   }
   * { box-sizing: border-box; }
@@ -47,13 +47,17 @@
   .row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: 13px; color: var(--muted); }
   .btn { font: inherit; font-size: 13px; border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
   .card-wrap { position: relative; }
-  .card-wrap > .preset { width: 100%; padding-right: 42px; }
-  .heart {
+  .card-wrap > .preset { width: 100%; padding-right: 74px; }
+  .heart, .share {
     display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0;
     border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer;
   }
   .card-wrap > .heart { position: absolute; top: 5px; right: 6px; }
-  .heart svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+  .card-wrap > .share { position: absolute; top: 5px; right: 38px; }
+  .heart svg, .share svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .share:hover { color: var(--ink); background: var(--ink-bg); }
+  .share:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .sec-actions { display: flex; gap: 2px; }
   .heart:hover { color: var(--heart); background: var(--heart-bg); }
   .heart[aria-pressed="true"] { color: var(--heart); }
   .heart[aria-pressed="true"] svg { fill: currentColor; }
@@ -80,6 +84,26 @@
     main { grid-row: 1; }
     aside { border-right: 0; border-top: 1px solid var(--line); }
   }
+  /* Shared link (?palette=…): only the model and that one palette */
+  body.shared { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+  body.shared aside { display: none; }
+  #share-card {
+    position: absolute; left: 16px; bottom: 16px; max-width: calc(100% - 32px); width: 280px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.08); display: grid; gap: 10px;
+  }
+  #share-card h1 { font-size: 18px; }
+  #share-card .bar { width: 100%; height: 22px; }
+  .sw-row { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
+  .sw-row i { width: 22px; height: 22px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+  .sw-row code { font: 12px ui-monospace, Menlo, monospace; color: var(--muted); }
+  #toast {
+    position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 12px); opacity: 0; pointer-events: none;
+    max-width: calc(100% - 32px); background: var(--fg); color: var(--bg); border-radius: 8px; padding: 8px 14px;
+    font-size: 13px; overflow-wrap: anywhere; transition: opacity .2s, transform .2s; user-select: all; z-index: 10;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
 </style>
 </head>
 <body>
@@ -102,7 +126,10 @@
   <section>
     <div class="sec-head">
       <h2>Colors</h2>
-      <button class="heart" id="fav-current" aria-pressed="false"></button>
+      <span class="sec-actions">
+        <button class="share" id="share-current" title="Share current colors" aria-label="Share current colors"></button>
+        <button class="heart" id="fav-current" aria-pressed="false"></button>
+      </span>
     </div>
     <div class="roles" id="roles"></div>
   </section>
@@ -139,7 +166,9 @@
       <button id="load-btn">Download model</button>
     </div>
   </div>
+  <div id="share-card" hidden></div>
 </main>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -361,6 +390,45 @@ function toggleFavorite(c) {
 function pop(el) { if (!el) return; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
 function heartLabel(on, what) { return `${on ? 'Remove' : 'Add'} ${what} ${on ? 'from' : 'to'} favorites`; }
 
+// Sharing: ?palette=rrggbb-rrggbb-rrggbb-rrggbb (primary, accent, chains, frame)
+const SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+const paletteName = c => (presetOf(c) || { name: 'Custom palette' }).name;
+const shareUrl = c => `${location.origin}${location.pathname}?palette=${c.map(x => x.slice(1).toLowerCase()).join('-')}`;
+let toastTimer;
+function toast(msg, ms = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+async function sharePalette(c) {
+  const url = shareUrl(c);
+  // Native share sheet on touch devices, clipboard elsewhere
+  if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+    try { await navigator.share({ title: `${paletteName(c)} · Voron Color Preview`, url }); return; }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(url); toast('Link copied'); }
+  catch (e) { toast(url, 10000); } // clipboard blocked: show the link so it can be copied by hand
+}
+
+// Opened from a shared link: show only the model and this one palette.
+const sharedColors = (() => {
+  const v = new URLSearchParams(location.search).get('palette');
+  const c = v ? v.split('-').map(h => '#' + h.toLowerCase()) : [];
+  return c.length === 4 && c.every(isHex) ? c : null;
+})();
+if (sharedColors) {
+  state.colors = sharedColors.slice();
+  state.preset = PRESETS.findIndex(p => sameColors(p.c, sharedColors));
+  document.body.classList.add('shared');
+  const name = paletteName(sharedColors);
+  document.title = `${name} · Voron Color Preview`;
+  const card = document.getElementById('share-card');
+  card.innerHTML = `<h1>${name}</h1>` + ROLES.map((r, i) =>
+    `<div class="sw-row"><i style="background:${sharedColors[i]}"></i><span>${r.name}</span><code>${sharedColors[i].toUpperCase()}</code></div>`).join('');
+  card.hidden = false;
+}
+
 // Updates everything that depends on the favorites list, without re-rendering the presets.
 function renderFavorites() {
   document.getElementById('fav-section').hidden = favorites.length === 0;
@@ -374,6 +442,7 @@ function renderFavorites() {
         <span class="bar">${f.c.map(c => `<span style="flex:1;background:${c}"></span>`).join('')}</span>
         ${p ? '' : `<small>${f.c.map(c => c.toUpperCase()).join(' · ')}</small>`}
       </button>
+      <button class="share" data-share-fav="${i}" title="Share ${name}" aria-label="Share ${name}">${SHARE}</button>
       <button class="heart" data-unfav="${i}" aria-pressed="true" title="${heartLabel(true, name)}" aria-label="${heartLabel(true, name)}">${HEART}</button>
     </div>`;
   }).join('');
@@ -383,6 +452,7 @@ function renderFavorites() {
     apply();
   });
   document.querySelectorAll('[data-unfav]').forEach(b => b.onclick = () => toggleFavorite(favorites[+b.dataset.unfav].c));
+  document.querySelectorAll('[data-share-fav]').forEach(b => b.onclick = () => sharePalette(favorites[+b.dataset.shareFav].c));
   document.querySelectorAll('[data-heart]').forEach(b => {
     const p = PRESETS[+b.dataset.heart], on = isFavorite(p.c);
     b.setAttribute('aria-pressed', on); b.title = heartLabel(on, p.name); b.setAttribute('aria-label', b.title);
@@ -393,6 +463,8 @@ function renderFavorites() {
 
 document.getElementById('fav-current').innerHTML = HEART;
 document.getElementById('fav-current').onclick = e => { toggleFavorite(state.colors); pop(e.currentTarget); };
+document.getElementById('share-current').innerHTML = SHARE;
+document.getElementById('share-current').onclick = () => sharePalette(state.colors);
 
 function renderUI() {
   document.getElementById('presets').innerHTML = PRESETS.map((p, i) => `
@@ -403,12 +475,14 @@ function renderUI() {
         <span class="bar">${p.c.slice(0, 3).map((c, j) => `<span style="flex:${[6, 3, 1][j]};background:${c}"></span>`).join('')}</span>
         <small>${p.note}</small>
       </button>
+      <button class="share" data-share="${i}" title="Share ${p.name}" aria-label="Share ${p.name}">${SHARE}</button>
       <button class="heart" data-heart="${i}" aria-pressed="false">${HEART}</button>
     </div>`).join('');
   document.querySelectorAll('#presets .preset').forEach(b => b.onclick = () => {
     state.preset = +b.dataset.i; state.colors = PRESETS[state.preset].c.slice(); apply();
   });
   document.querySelectorAll('[data-heart]').forEach(b => b.onclick = () => { toggleFavorite(PRESETS[+b.dataset.heart].c); pop(b); });
+  document.querySelectorAll('[data-share]').forEach(b => b.onclick = () => sharePalette(PRESETS[+b.dataset.share].c));
   renderFavorites();
   document.getElementById('roles').innerHTML = ROLES.map((r, i) => `
     <div class="role">
