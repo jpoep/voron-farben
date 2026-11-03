@@ -70,6 +70,8 @@ CHAIN = re.compile(r'X_Cable_Chain|Y Cable Chain|IGUS Z Chain')
 def classify(path, col):
     if re.search(r'/ HFSB5-[^/]*( / (SOLID|COMPOUND))?$', path):
         return '4_frame'
+    if re.search(r'/ 10in Bed / (10in MIC6 Plate|Magnet Sheet|Flex Sheet)$', path):
+        return '4_frame'                                # build plate follows the frame colour
     if PANEL_SHEET.search(path):
         return 'panels'
     if CHAIN.search(path) and col in DARK:
