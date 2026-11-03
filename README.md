@@ -1,35 +1,47 @@
-# Voron-Farben
+# Voron Color Preview
 
-Farbschema für den Voron 2.4 (300 mm). Grundfarbe: Prusament ASA `#00CA97` (Mint).
+A browser-based color preview for the Voron 2.4. Pick a palette or set your own colors per part role and see them on a full 3D model of the printer.
 
-## 3D-Viewer
+**Live:** https://jpoep.github.io/voron-farben/
 
-Online über GitHub Pages (wird bei jedem Push auf `main` per GitHub Actions neu gebaut).
+## Pages
 
-Lokal:
+- **3D preview** (`index.html`): palette presets, free hex colors for each role (primary, accent, chains, frame), panel and lighting options, front/angle/top views. The model is only downloaded on request, with a progress bar.
+- **Palette board** (`palettes.html`): a 2D swatch board of three-color palettes around a mint base, with a simplified front view of the printer.
+
+## Model
+
+`voron24.glb` is built from the official [Voron 2.4r2 CAD](https://github.com/VoronDesign/Voron-2) by Voron Design (GPL-3.0). It is Draco-compressed (~6 MB) and stored with Git LFS.
+
+The CAD only exists in the 250 mm size. The printed parts are identical across sizes, so the colors and their placement match the 300 and 350 mm builds.
+
+To rebuild it:
 
 ```sh
-python3 -m http.server 8791 --bind 127.0.0.1 --directory ~/projects/voron-farben
+tools/build-model.sh            # writes voron24.glb
 ```
 
-Dann http://127.0.0.1:8791/ öffnen. Der Server ist nötig, weil der Browser das Modell nicht direkt von `file://` lädt.
+Requirements: `DRAWEXE` (OpenCASCADE), Python 3, Node.js. The script downloads the STEP assembly, meshes it with OpenCASCADE, then runs `tools/classify.py`, which:
 
-- `index.html` – Viewer mit Paletten, freien Hex-Farben pro Rolle (Primär, Akzent, Ketten, Rahmen), Panels und Licht. Das Modell wird erst nach Klick geladen, mit Fortschrittsanzeige.
-- `voron24.glb` – Modell aus dem offiziellen Voron-2.4r2-CAD ([VoronDesign/Voron-2](https://github.com/VoronDesign/Voron-2), GPL-3.0), Draco-komprimiert (~6 MB), per Git LFS versioniert. Das CAD gibt es nur in der 250-mm-Größe; Teile und Farbrollen sind identisch zur 300er.
-- `tools/build-model.sh` – baut `voron24.glb` neu aus dem STEP (braucht `DRAWEXE` aus opencascade, Python 3, Node). `tools/classify.py` entfernt überlappende CAD-Varianten (Skirts 300/350, weitere Controller, D2F-Endstop, 6-mm-Tensioner, Logo-Blende statt Display …) und ordnet Teile per CAD-Farbe und Baugruppenpfad den Rollen zu.
-- `voron-paletten.html` – erste 2D-Übersicht, auch als Artifact: https://claude.ai/artifact/318bVBVHQwZhrfEediEd5P
+- removes overlapping alternative parts that the STEP export contains side by side (300/350 mm skirts, other controller boards, the D2F endstop pod, 6 mm Z tensioners, the logo plate in place of the display, …)
+- assigns each printed part a color role based on its CAD color and assembly path, stored as the material name (`1_first_color`, `2_second_color`, `3_chains`, `4_frame`, `panels`)
 
-Das frühere Modell `voron_v2_default.glb` (von 3dprinter-color-configurator.com, Lizenz unklar) liegt nur lokal und ist per `.gitignore` ausgeschlossen.
+Finally `gltf-transform` merges meshes per material and applies Draco compression.
 
-## Stand (2026-11-03)
+## Development
 
-Favoriten: Flieder `#AC96C6` + Koralle `#F2707A`, vor allem „Pflaume“ (Aubergine `#3A2440`), dazu Creme/Butter-Gelb, Korallenriff (Koralle führt) und Petrol.
+The pages are static files. Serve the repository root with any static file server, for example:
 
-Beschaffung ABS/ASA (EU):
-- Koralle: eSUN ABS Pink `#FB7A8C` kommt nah ran (Spectrum Coral ist eher Lachs/Beige).
-- Aubergine: Polymaker ABS Dark Purple.
-- Petrol: Polymaker ASA Teal (heller) oder Nobufil ABSx Industrial Petrol.
-- Flieder und Pastell-Gelb: in der EU nicht als ABS/ASA gefunden. KVP Pastel Purple gibt es nur in den USA.
-- Wunschfarben: 3D Trček (Slowenien, auf Anfrage, RAL/Pantone/Muster), ColoriLab (ABS/ASA ab ca. 2–5 kg, nicht geprüft).
+```sh
+python3 -m http.server
+```
 
-Nächster Schritt: echte Hex-Werte der gewählten Filamente sammeln, dann Mockup damit.
+A server is needed because browsers don't load the model from `file://`.
+
+## Deployment
+
+`.github/workflows/pages.yml` deploys to GitHub Pages on every push to `main`. It checks out the LFS model and publishes only the two pages and the model.
+
+## License
+
+The 3D model is derived from the Voron Design CAD and is licensed under GPL-3.0.

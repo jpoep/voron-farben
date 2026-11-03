@@ -1,10 +1,14 @@
-<title>Voron Mint-Paletten</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voron Mint Palettes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: Werkbank – links eine stehende Vorschau des Druckers, rechts das Musterbrett mit Paletten-Karten */
+/* Layout: workbench – a standing printer preview on the left, the swatch board with palette cards on the right */
 :root {
   --bg: #eef1f0;
   --surface: #ffffff;
@@ -12,8 +16,8 @@
   --muted: #56635e;
   --line: #d3dbd8;
   --scene: #dde4e1;
-  --ink: #007457;          /* Mint, dunkel genug für Text */
-  --base: #00ca97;         /* Rusamant ASA */
+  --ink: #007457;          /* mint, dark enough for text */
+  --base: #00ca97;         /* base mint */
   --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -32,6 +36,7 @@
 
 * { box-sizing: border-box; }
 body {
+  margin: 0;
   background: var(--bg); color: var(--fg);
   font-family: var(--font-body); font-size: 15px; line-height: 1.5;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -45,6 +50,7 @@ header { display: grid; gap: 10px; max-width: 70ch; }
   font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em;
   text-transform: uppercase; color: var(--muted);
 }
+.eyebrow a { color: inherit; }
 h1 {
   font-family: var(--font-display); font-stretch: 118%; font-weight: 800;
   font-size: clamp(30px, 5vw, 46px); line-height: 1.02; margin: 0;
@@ -63,7 +69,7 @@ header p { margin: 0; color: var(--muted); }
 .layout { display: grid; grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); gap: 28px; align-items: start; }
 @media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
 
-/* Vorschau */
+/* Preview */
 .stage {
   position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
   display: grid; gap: 14px; background: var(--surface);
@@ -108,7 +114,7 @@ header p { margin: 0; color: var(--muted); }
 .btn:hover { border-color: var(--muted); }
 .fine { margin: 0; font-size: 12px; color: var(--muted); }
 
-/* Musterbrett */
+/* Swatch board */
 .board { display: grid; gap: 14px; min-width: 0; }
 .board-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
 .board-head h2 { font-family: var(--font-display); font-stretch: 112%; font-size: 20px; margin: 0; }
@@ -145,39 +151,40 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outli
 
 @media (prefers-reduced-motion: reduce) { .card, .strip span { transition: none; } }
 </style>
-
+</head>
+<body>
 <div class="wrap">
   <header>
-    <div class="eyebrow">Voron 2.4 · 300 mm · Farbschema</div>
-    <h1>Was passt zu <span class="mint">Mint</span>?</h1>
-    <p>Elf Paletten aus je drei Farben rund um deine Grundfarbe. Wähle eine Karte, tausch die Rollen und prüf das Ganze mit schwarzem oder silbernem Rahmen. Ob es die Töne als ABS/ASA gibt, klären wir danach.</p>
-    <span class="base-chip"><i></i>Rusamant ASA · <span class="mono">#00CA97</span></span>
+    <div class="eyebrow">Voron 2.4 · Color scheme · <a href="./">3D preview</a></div>
+    <h1>What goes with <span class="mint">mint</span>?</h1>
+    <p>Eleven three-color palettes built around a mint base. Pick a card, swap the roles and check the result with a black or silver frame.</p>
+    <span class="base-chip"><i></i>Base color · <span class="mono">#00CA97</span></span>
   </header>
 
   <div class="layout">
-    <section class="stage" aria-label="Vorschau">
+    <section class="stage" aria-label="Preview">
       <div class="stage-title">
-        <h2 id="stage-name">Werkstatt</h2>
+        <h2 id="stage-name">Workshop</h2>
         <span id="stage-type">Neutral</span>
       </div>
       <div class="scene">
-        <svg id="printer" viewBox="0 0 420 490" role="img" aria-label="Vereinfachte Frontansicht eines Voron 2.4 in der gewählten Palette">
-          <!-- Rückwand -->
+        <svg id="printer" viewBox="0 0 420 490" role="img" aria-label="Simplified front view of a Voron 2.4 in the selected palette">
+          <!-- Rear panel -->
           <rect x="50" y="60" width="320" height="320" fill="#1a1e20"/>
-          <!-- Z-Riemen -->
+          <!-- Z belts -->
           <rect x="73" y="176" width="4" height="164" fill="#0b0d0e"/>
           <rect x="343" y="176" width="4" height="164" fill="#0b0d0e"/>
-          <!-- Bett -->
+          <!-- Bed -->
           <rect x="96" y="294" width="228" height="12" rx="2" fill="#3a4043"/>
           <rect x="100" y="288" width="220" height="6" rx="1" fill="#8a7653"/>
           <rect x="150" y="306" width="10" height="74" fill="#2a2f31"/>
           <rect x="260" y="306" width="10" height="74" fill="#2a2f31"/>
-          <!-- Z-Antriebe -->
+          <!-- Z drives -->
           <rect class="p" x="50" y="334" width="56" height="46" rx="4"/>
           <rect x="60" y="344" width="28" height="28" rx="2" fill="#2c3235"/>
           <rect class="p" x="314" y="334" width="56" height="46" rx="4"/>
           <rect x="332" y="344" width="28" height="28" rx="2" fill="#2c3235"/>
-          <!-- A/B-Antriebe -->
+          <!-- A/B drives -->
           <rect class="p" x="50" y="60" width="64" height="46" rx="4"/>
           <rect x="60" y="68" width="30" height="30" rx="2" fill="#2c3235"/>
           <rect class="p" x="306" y="60" width="64" height="46" rx="4"/>
@@ -196,10 +203,10 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outli
           <rect x="194" y="170" width="32" height="5" rx="2" fill="#101314"/>
           <rect x="198" y="180" width="24" height="5" rx="2" fill="#101314"/>
           <path d="M204 210 h12 l-3 10 h-6z" fill="#c9a24a"/>
-          <!-- Türen / Panels -->
+          <!-- Doors / panels -->
           <rect class="panel" x="50" y="60" width="320" height="320"/>
           <rect x="209.5" y="60" width="1" height="320" fill="rgba(255,255,255,.18)"/>
-          <!-- Rahmen -->
+          <!-- Frame -->
           <rect class="fr" x="30" y="40" width="360" height="20"/>
           <rect class="fr" x="30" y="380" width="360" height="20"/>
           <rect class="fr" x="30" y="40" width="20" height="360"/>
@@ -208,18 +215,18 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outli
           <rect x="30" y="389" width="360" height="2" fill="rgba(0,0,0,.22)"/>
           <rect x="39" y="40" width="2" height="360" fill="rgba(0,0,0,.22)"/>
           <rect x="379" y="40" width="2" height="360" fill="rgba(0,0,0,.22)"/>
-          <!-- Panel-Clips -->
+          <!-- Panel clips -->
           <rect class="d" x="100" y="44" width="16" height="12" rx="2"/>
           <rect class="d" x="202" y="44" width="16" height="12" rx="2"/>
           <rect class="d" x="304" y="44" width="16" height="12" rx="2"/>
           <rect class="d" x="100" y="384" width="16" height="12" rx="2"/>
           <rect class="d" x="304" y="384" width="16" height="12" rx="2"/>
-          <!-- Scharniere -->
+          <!-- Hinges -->
           <rect class="d" x="42" y="96" width="16" height="32" rx="3"/>
           <rect class="d" x="42" y="308" width="16" height="32" rx="3"/>
           <rect class="d" x="362" y="96" width="16" height="32" rx="3"/>
           <rect class="d" x="362" y="308" width="16" height="32" rx="3"/>
-          <!-- Türgriffe -->
+          <!-- Door handles -->
           <rect class="a" x="192" y="200" width="10" height="60" rx="5"/>
           <rect class="a" x="218" y="200" width="10" height="60" rx="5"/>
           <!-- Skirts -->
@@ -237,23 +244,23 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outli
           <rect x="180" y="418" width="38" height="3" rx="1" fill="#6fcfb6"/>
           <rect x="180" y="425" width="56" height="3" rx="1" fill="#3f8a77"/>
           <rect x="180" y="432" width="30" height="3" rx="1" fill="#3f8a77"/>
-          <!-- Füße -->
+          <!-- Feet -->
           <rect class="d" x="44" y="456" width="36" height="14" rx="3"/>
           <rect class="d" x="340" y="456" width="36" height="14" rx="3"/>
         </svg>
       </div>
 
       <div class="controls">
-        <div class="seg">Rahmen
+        <div class="seg">Frame
           <span class="seg-btns" data-key="frame">
-            <button type="button" id="frame-black" data-val="black">Schwarz</button>
-            <button type="button" id="frame-silver" data-val="silver">Silber</button>
+            <button type="button" id="frame-black" data-val="black">Black</button>
+            <button type="button" id="frame-silver" data-val="silver">Silver</button>
           </span>
         </div>
         <div class="seg">Panels
           <span class="seg-btns" data-key="panel">
-            <button type="button" id="panel-smoke" data-val="smoke">Rauchglas</button>
-            <button type="button" id="panel-clear" data-val="clear">Klar</button>
+            <button type="button" id="panel-smoke" data-val="smoke">Smoked</button>
+            <button type="button" id="panel-clear" data-val="clear">Clear</button>
           </span>
         </div>
       </div>
@@ -261,19 +268,19 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outli
       <ul class="roles" id="roles"></ul>
 
       <div class="swaps">
-        <button type="button" class="btn" id="swap-pa">Haupt ⇄ Akzent</button>
-        <button type="button" class="btn" id="swap-ad">Akzent ⇄ Details</button>
+        <button type="button" class="btn" id="swap-pa">Main ⇄ Accent</button>
+        <button type="button" class="btn" id="swap-ad">Accent ⇄ Details</button>
       </div>
-      <p class="fine">Die Anteile folgen der 60-30-10-Faustregel für die Druckteile. Rahmen und Rückwand kommen optisch noch dazu, deshalb wirken dunkle Hauptfarben am echten Drucker ruhiger als hier.</p>
+      <p class="fine">The shares follow the 60-30-10 rule of thumb for the printed parts. The frame and rear panel add to the overall look, so dark main colors look calmer on a real printer than they do here.</p>
     </section>
 
-    <section class="board" aria-label="Paletten">
+    <section class="board" aria-label="Palettes">
       <div class="board-head">
-        <h2>Musterbrett</h2>
-        <span>Grundfarbe + zwei Ergänzungen</span>
+        <h2>Swatch board</h2>
+        <span>Base color + two companions</span>
       </div>
       <div class="grid" id="grid"></div>
-      <p class="fine">Bildschirmfarben weichen vom gedruckten Filament ab, besonders bei Mint und Pastelltönen. Vor dem Kauf Musterkarten oder Fotos echter Drucke vergleichen.</p>
+      <p class="fine">Screen colors differ from printed filament, especially mint and pastels. Compare against swatches or photos of real prints.</p>
     </section>
   </div>
 </div>
@@ -281,61 +288,62 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outli
 <script>
 const BASE = '#00ca97';
 const ROLES = [
-  { key: 'p', name: 'Hauptteile', share: 6, pct: '≈ 60 %', parts: 'Skirts, XY-Joints, A/B- und Z-Antriebe, Toolhead-Körper' },
-  { key: 'a', name: 'Akzent', share: 3, pct: '≈ 30 %', parts: 'Toolhead-Front, Türgriffe, Display-Rahmen' },
-  { key: 'd', name: 'Details', share: 1, pct: '≈ 10 %', parts: 'Panel-Clips, Scharniere, Füße, Lüftungsgitter, LED-Diffusor' },
+  { key: 'p', name: 'Main parts', share: 6, pct: '≈ 60 %', parts: 'Skirts, XY joints, A/B and Z drives, toolhead body' },
+  { key: 'a', name: 'Accent', share: 3, pct: '≈ 30 %', parts: 'Toolhead front, door handles, display frame' },
+  { key: 'd', name: 'Details', share: 1, pct: '≈ 10 %', parts: 'Panel clips, hinges, feet, vent grilles, LED diffuser' },
 ];
-// colors[0] ist immer die Grundfarbe; order = Index pro Rolle [Haupt, Akzent, Details]
+// colors[0] is always the base color; order = color index per role [main, accent, details]
 const PALETTES = [
-  { id: 'werkstatt', name: 'Werkstatt', type: 'Neutral',
-    colors: [BASE, '#2b3033', '#d3d9d7'], names: ['Rusamant Mint', 'Anthrazit', 'Lichtgrau'], order: [1, 0, 2],
-    note: 'Der klassische Voron-Aufbau: dunkle Teile, Mint als Akzent. Zeitlos und mit jedem Rahmen stimmig.' },
+  { id: 'workshop', name: 'Workshop', type: 'Neutral',
+    colors: [BASE, '#2b3033', '#d3d9d7'], names: ['Mint', 'Anthracite', 'Light grey'], order: [1, 0, 2],
+    note: 'The classic Voron look: dark parts with mint as the accent. Timeless and works with any frame.' },
   { id: 'diner', name: 'Fifties Diner', type: 'Retro',
-    colors: [BASE, '#efe4cc', '#d42a3c'], names: ['Rusamant Mint', 'Creme', 'Kirschrot'], order: [0, 1, 2],
-    note: 'Mint und Creme wie ein alter Kühlschrank, Kirschrot nur in Kleinteilen. Das Rot zitiert das Voron-Original.' },
-  { id: 'koralle', name: 'Korallenriff', type: 'Komplementär',
-    colors: [BASE, '#1c2b40', '#ff5f73'], names: ['Rusamant Mint', 'Marineblau', 'Koralle'], order: [0, 1, 2],
-    note: 'Koralle liegt Mint auf dem Farbkreis fast gegenüber (≈350° zu 165°). Marine dämpft die Spannung.' },
-  { id: 'boxengasse', name: 'Boxengasse', type: 'Warm/Kalt',
-    colors: [BASE, '#1f2326', '#ff6a13'], names: ['Rusamant Mint', 'Graphit', 'Signalorange'], order: [1, 0, 2],
-    note: 'Motorsport-Look. Orange in kleinen Dosen lenkt den Blick auf Griffe und Toolhead.' },
-  { id: 'morgensonne', name: 'Morgensonne', type: 'Frisch',
-    colors: [BASE, '#1d2a44', '#ffd23f'], names: ['Rusamant Mint', 'Nachtblau', 'Sonnengelb'], order: [0, 1, 2],
-    note: 'Gelb und Mint sind beide hell und fröhlich, Nachtblau gibt dem Ganzen Gewicht.' },
-  { id: 'lagune', name: 'Lagune', type: 'Analog',
-    colors: [BASE, '#0f3a47', '#8fd9ea'], names: ['Rusamant Mint', 'Petrol', 'Eisblau'], order: [1, 0, 2],
-    note: 'Nachbarn auf dem Farbkreis: alles kühl, alles Wasser. Sehr harmonisch, wenig Reibung.' },
-  { id: 'tonintonm', name: 'Ton in Ton', type: 'Monochrom',
-    colors: [BASE, '#0d3d33', '#c3f0df'], names: ['Rusamant Mint', 'Tannengrün', 'Minzweiß'], order: [0, 1, 2],
-    note: 'Ein Farbton in drei Helligkeiten. Wirkt edel und ruhig, solange die Abstufung deutlich bleibt.' },
-  { id: 'nachtschicht', name: 'Nachtschicht', type: 'Kühl',
-    colors: [BASE, '#2a1f4d', '#eef0f3'], names: ['Rusamant Mint', 'Tiefviolett', 'Weiß'], order: [1, 0, 2],
-    note: 'Dunkles Violett statt Schwarz bringt Tiefe, ohne düster zu werden. Mint leuchtet darauf besonders.' },
-  { id: 'gletscher', name: 'Gletscher', type: 'Hell',
-    colors: [BASE, '#f3f5f5', '#8b979b'], names: ['Rusamant Mint', 'Weiß', 'Kühlgrau'], order: [1, 0, 2],
-    note: 'Hell und clean, wirkt wie ein Laborgerät. Am besten mit silbernem Rahmen und klaren Panels.' },
-  { id: 'triade', name: 'Triade', type: 'Triadisch',
-    colors: [BASE, '#8a46e6', '#ffb51f'], names: ['Rusamant Mint', 'Violett', 'Bernstein'], order: [0, 1, 2],
-    note: 'Drei gleichmäßig verteilte Farbtöne. Laut und verspielt, funktioniert nur mit klarer Hierarchie.' },
-  { id: 'split', name: 'Neon-Garage', type: 'Split-Komplementär',
-    colors: [BASE, '#d93fa9', '#ff5b3a'], names: ['Rusamant Mint', 'Magenta', 'Orangerot'], order: [0, 1, 2],
-    note: 'Die beiden Nachbarn der Komplementärfarbe. Maximaler Kontrast, eher Statement als Werkzeug.' },
+    colors: [BASE, '#efe4cc', '#d42a3c'], names: ['Mint', 'Cream', 'Cherry red'], order: [0, 1, 2],
+    note: 'Mint and cream like an old fridge, cherry red only in small parts. The red nods to the original Voron colors.' },
+  { id: 'coral-reef', name: 'Coral Reef', type: 'Complementary',
+    colors: [BASE, '#1c2b40', '#ff5f73'], names: ['Mint', 'Navy', 'Coral'], order: [0, 1, 2],
+    note: 'Coral sits almost opposite mint on the color wheel (≈350° vs. 165°). Navy softens the tension.' },
+  { id: 'pit-lane', name: 'Pit Lane', type: 'Warm/cool',
+    colors: [BASE, '#1f2326', '#ff6a13'], names: ['Mint', 'Graphite', 'Signal orange'], order: [1, 0, 2],
+    note: 'Motorsport look. Small doses of orange draw the eye to the handles and the toolhead.' },
+  { id: 'morning-sun', name: 'Morning Sun', type: 'Fresh',
+    colors: [BASE, '#1d2a44', '#ffd23f'], names: ['Mint', 'Midnight blue', 'Sun yellow'], order: [0, 1, 2],
+    note: 'Yellow and mint are both light and cheerful; midnight blue gives the whole thing weight.' },
+  { id: 'lagoon', name: 'Lagoon', type: 'Analogous',
+    colors: [BASE, '#0f3a47', '#8fd9ea'], names: ['Mint', 'Teal', 'Ice blue'], order: [1, 0, 2],
+    note: 'Neighbors on the color wheel: all cool, all water. Very harmonious, little friction.' },
+  { id: 'tone-on-tone', name: 'Tone on Tone', type: 'Monochrome',
+    colors: [BASE, '#0d3d33', '#c3f0df'], names: ['Mint', 'Forest green', 'Mint white'], order: [0, 1, 2],
+    note: 'One hue in three lightness levels. Looks refined and calm as long as the steps stay distinct.' },
+  { id: 'night-shift', name: 'Night Shift', type: 'Cool',
+    colors: [BASE, '#2a1f4d', '#eef0f3'], names: ['Mint', 'Deep violet', 'White'], order: [1, 0, 2],
+    note: 'Dark violet instead of black adds depth without turning gloomy. Mint really glows on it.' },
+  { id: 'glacier', name: 'Glacier', type: 'Light',
+    colors: [BASE, '#f3f5f5', '#8b979b'], names: ['Mint', 'White', 'Cool grey'], order: [1, 0, 2],
+    note: 'Light and clean, like lab equipment. Best with a silver frame and clear panels.' },
+  { id: 'triad', name: 'Triad', type: 'Triadic',
+    colors: [BASE, '#8a46e6', '#ffb51f'], names: ['Mint', 'Violet', 'Amber'], order: [0, 1, 2],
+    note: 'Three evenly spaced hues. Loud and playful; it only works with a clear hierarchy.' },
+  { id: 'neon-garage', name: 'Neon Garage', type: 'Split complementary',
+    colors: [BASE, '#d93fa9', '#ff5b3a'], names: ['Mint', 'Magenta', 'Red orange'], order: [0, 1, 2],
+    note: 'The two neighbors of the complement. Maximum contrast, more statement than tool.' },
 ];
-const CUSTOM = { id: 'eigene', name: 'Eigene Palette', type: 'Zum Ausprobieren', order: [0, 1, 2],
-  names: ['Rusamant Mint', 'Eigene Farbe 1', 'Eigene Farbe 2'] };
+const CUSTOM = { id: 'custom', name: 'Custom palette', type: 'Try your own', order: [0, 1, 2],
+  names: ['Mint', 'Custom color 1', 'Custom color 2'] };
 const FRAMES = { black: '#17191a', silver: '#b4babd' };
 const PANELS = { smoke: 'rgba(16,20,22,.42)', clear: 'rgba(225,238,242,.10)' };
 
-const state = { id: 'werkstatt', frame: 'black', panel: 'smoke', custom: ['#3a3f58', '#f2c14e'], orders: {} };
+const STORE = 'voron-palettes';
+const state = { id: 'workshop', frame: 'black', panel: 'smoke', custom: ['#3a3f58', '#f2c14e'], orders: {} };
 try {
-  const saved = JSON.parse(localStorage.getItem('voron-paletten') || 'null');
+  const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
   if (saved) Object.assign(state, saved);
 } catch (e) {}
-function save() { try { localStorage.setItem('voron-paletten', JSON.stringify(state)); } catch (e) {} }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
 
 const all = () => [...PALETTES, CUSTOM];
 const byId = id => all().find(p => p.id === id) || PALETTES[0];
-const colorsOf = p => p.id === 'eigene' ? [BASE, ...state.custom] : p.colors;
+const colorsOf = p => p.id === 'custom' ? [BASE, ...state.custom] : p.colors;
 const orderOf = p => state.orders[p.id] || p.order;
 const up = h => h.toUpperCase();
 
@@ -355,24 +363,24 @@ function render() {
       </span>
       <span class="note">${p.note}</span>
     </button>`).join('') + `
-    <div class="card" data-id="eigene" id="custom-card">
+    <div class="card" data-id="custom" id="custom-card">
       <span class="card-head"><span class="card-name">${CUSTOM.name}</span><span class="tag">${CUSTOM.type}</span></span>
       <span class="strip">${stripHTML(CUSTOM)}</span>
       <div class="custom-inputs">
-        <label><span class="dot" style="width:34px;height:26px;border-radius:6px;background:${BASE};box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)"></span><span>Rusamant Mint</span><span class="hex">#00CA97</span></label>
-        <label for="custom-1"><input type="color" id="custom-1" value="${state.custom[0]}"><span>Eigene Farbe 1</span><span class="hex" id="custom-1-hex">${up(state.custom[0])}</span></label>
-        <label for="custom-2"><input type="color" id="custom-2" value="${state.custom[1]}"><span>Eigene Farbe 2</span><span class="hex" id="custom-2-hex">${up(state.custom[1])}</span></label>
+        <label><span class="dot" style="width:34px;height:26px;border-radius:6px;background:${BASE};box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)"></span><span>Mint</span><span class="hex">#00CA97</span></label>
+        <label for="custom-1"><input type="color" id="custom-1" value="${state.custom[0]}"><span>Custom color 1</span><span class="hex" id="custom-1-hex">${up(state.custom[0])}</span></label>
+        <label for="custom-2"><input type="color" id="custom-2" value="${state.custom[1]}"><span>Custom color 2</span><span class="hex" id="custom-2-hex">${up(state.custom[1])}</span></label>
       </div>
-      <button type="button" class="btn" id="custom-show">In der Vorschau zeigen</button>
+      <button type="button" class="btn" id="custom-show">Show in preview</button>
     </div>`;
 
   grid.querySelectorAll('button.card').forEach(b => b.addEventListener('click', () => select(b.dataset.id)));
-  document.getElementById('custom-show').addEventListener('click', () => select('eigene'));
+  document.getElementById('custom-show').addEventListener('click', () => select('custom'));
   [0, 1].forEach(i => {
     document.getElementById(`custom-${i + 1}`).addEventListener('input', e => {
       state.custom[i] = e.target.value;
       document.getElementById(`custom-${i + 1}-hex`).textContent = up(e.target.value);
-      select('eigene');
+      select('custom');
     });
   });
 }
@@ -424,3 +432,5 @@ document.querySelectorAll('.seg-btns').forEach(g => {
 render();
 update();
 </script>
+</body>
+</html>

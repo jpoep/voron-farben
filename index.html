@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voron Farbprobe 3D</title>
+<title>Voron Color Preview</title>
 <style>
   :root {
     --bg: #eef1f0; --panel: #ffffff; --fg: #142019; --muted: #56635e; --line: #d3dbd8; --ink: #007457;
@@ -67,50 +67,50 @@
 <body>
 <aside>
   <div>
-    <h1>Voron Farbprobe 3D</h1>
-    <p class="fine">Modell: offizielles Voron-2.4r2-CAD von <a href="https://github.com/VoronDesign/Voron-2">Voron Design</a> (GPL-3.0).</p>
+    <h1>Voron Color Preview</h1>
+    <p class="fine">Model: official Voron 2.4r2 CAD by <a href="https://github.com/VoronDesign/Voron-2">Voron Design</a> (GPL-3.0). Also see the <a href="palettes.html">2D palette board</a>.</p>
   </div>
 
   <section>
-    <h2>Paletten</h2>
+    <h2>Palettes</h2>
     <div class="presets" id="presets"></div>
   </section>
 
   <section>
-    <h2>Farben</h2>
+    <h2>Colors</h2>
     <div class="roles" id="roles"></div>
   </section>
 
   <section>
-    <h2>Ansicht</h2>
+    <h2>View</h2>
     <div class="row" style="margin-bottom:8px">Panels
       <span class="seg" data-key="panels">
-        <button data-val="smoke">Rauchglas</button><button data-val="clear">Klar</button><button data-val="off">Aus</button>
+        <button data-val="smoke">Smoked</button><button data-val="clear">Clear</button><button data-val="off">Off</button>
       </span>
     </div>
-    <div class="row" style="margin-bottom:8px">Licht
+    <div class="row" style="margin-bottom:8px">Light
       <span class="seg" data-key="light">
-        <button data-val="day">Tag</button><button data-val="room">Zimmer</button>
+        <button data-val="day">Daylight</button><button data-val="room">Room</button>
       </span>
     </div>
     <div class="row">
-      <button class="btn" id="view-front">Vorne</button>
-      <button class="btn" id="view-angle">Schräg</button>
-      <button class="btn" id="view-top">Oben</button>
+      <button class="btn" id="view-front">Front</button>
+      <button class="btn" id="view-angle">Angle</button>
+      <button class="btn" id="view-top">Top</button>
     </div>
   </section>
 
-  <p class="fine">Farbangaben sind Bildschirmwerte. Gedrucktes ABS/ASA ist matter und meist etwas dunkler, besonders bei Pastelltönen.</p>
+  <p class="fine">Colors are screen values. Printed ABS/ASA is more matte and usually a little darker, especially pastels.</p>
 </aside>
 
 <main>
   <canvas id="c"></canvas>
   <div id="loader">
     <div class="card">
-      <b>3D-Modell laden</b>
-      <p id="load-info">Das Modell des Voron 2.4 wird erst auf Klick heruntergeladen.</p>
+      <b>Load 3D model</b>
+      <p id="load-info">The Voron 2.4 model is only downloaded when you click.</p>
       <div class="progress" id="load-bar" hidden><span></span></div>
-      <button id="load-btn">Modell herunterladen</button>
+      <button id="load-btn">Download model</button>
     </div>
   </div>
 </main>
@@ -123,33 +123,34 @@
 <script>
 const MINT = '#00ca97';
 const ROLES = [
-  { key: '1_first_color',  name: 'Primär',  parts: 'Hauptteile: Skirts, Antriebe, Joints, Toolhead-Körper' },
-  { key: '2_second_color', name: 'Akzent',  parts: 'Voron-[a]-Teile: Clips, Griffe, Toolhead-Front, Abdeckungen' },
-  { key: '3_chains',       name: 'Ketten',  parts: 'Gedruckte Zip-Chains' },
-  { key: '4_frame',        name: 'Rahmen',  parts: '2020-Profile, Druckbett' },
+  { key: '1_first_color',  name: 'Primary', parts: 'Main parts: skirts, drives, joints, toolhead body' },
+  { key: '2_second_color', name: 'Accent',  parts: 'Voron [a] parts: clips, handles, toolhead front, covers' },
+  { key: '3_chains',       name: 'Chains',  parts: 'Cable chains' },
+  { key: '4_frame',        name: 'Frame',   parts: '2020 extrusions, build plate' },
 ];
-// [Primär, Akzent, Ketten, Rahmen]
-const FLIEDER = '#ac96c6', KORALLE = '#f2707a', BLACK = '#222324', SILVER = '#b4babd';
+// [primary, accent, chains, frame]
+const LILAC = '#ac96c6', CORAL = '#f2707a', BLACK = '#222324', SILVER = '#b4babd';
 const PRESETS = [
-  { group: 'Flieder & Koralle', name: 'Graphit', note: 'Dunkle Fläche, Koralle und Flieder nur als Akzente. Die erwachsenste Variante', c: ['#2b2e33', KORALLE, FLIEDER, BLACK] },
-  { group: 'Flieder & Koralle', name: 'Abendrot', note: 'Nachtblau erdet die beiden süßen Töne, wie ein Himmel nach Sonnenuntergang', c: [FLIEDER, KORALLE, '#1d2a44', BLACK] },
-  { group: 'Flieder & Koralle', name: 'Pflaume', note: 'Aubergine führt, Ton in Ton mit Flieder, Koralle glüht darin', c: ['#3a2440', FLIEDER, KORALLE, BLACK] },
-  { group: 'Flieder & Koralle', name: 'Petrol', note: 'Dunkeltürkis ist der Gegenpol zur Koralle (KVP Dark Teal)', c: [FLIEDER, KORALLE, '#00687f', BLACK] },
-  { group: 'Flieder & Koralle', name: 'Petrol führt', note: 'Petrol als dunkle Grundfläche wie bei Pflaume, die Ketten tragen die Koralle', c: ['#00687f', FLIEDER, KORALLE, BLACK] },  { group: 'Flieder & Koralle', name: 'Salbei', note: 'Gedecktes Grün als Gegenpol zum Flieder, wie ein Bauerngarten', c: [FLIEDER, KORALLE, '#93ab8c', BLACK] },
-  { group: 'Flieder & Koralle', name: 'Butter', note: 'Gelb ist Flieders Komplementärfarbe. Frühlingshaft und sehr verspielt', c: [FLIEDER, KORALLE, '#f4dd8a', BLACK] },
-  { group: 'Flieder & Koralle', name: 'Creme', note: 'Retro-Grundton, Koralle und Flieder wirken darauf wie Emaille', c: ['#efe4cc', KORALLE, FLIEDER, BLACK] },
-  { group: 'Flieder & Koralle', name: 'Porzellan', note: 'Weiß mit silbernem Rahmen, die Farben nur in Kleinteilen', c: ['#f2f1f4', FLIEDER, KORALLE, SILVER] },
-  { group: 'Flieder & Koralle', name: 'Sorbet', note: 'Pfirsich verbindet beide Töne. Analog und weich, fast zu süß', c: [KORALLE, FLIEDER, '#ffc3a0', BLACK] },
-  { group: 'Flieder & Koralle', name: 'Messing', note: 'Metallic Gold (KVP) als edles Detail, warm wie die Koralle', c: [FLIEDER, KORALLE, '#d69928', BLACK] },
-  { group: 'Mit Mint', name: 'Korallenriff · Koralle führt', note: 'Dein Favorit mit Koralle als Hauptfarbe', c: ['#ff5f73', MINT, '#1c2b40', BLACK] },
-  { group: 'Mit Mint', name: 'Korallenriff · Mint führt', note: 'Original-Reihenfolge zum Vergleich', c: [MINT, '#1c2b40', '#ff5f73', BLACK] },
-  { group: 'Mit Mint', name: 'Koralle & Flieder', note: 'Koralle führt, Flieder begleitet, Mint als Detail', c: [KORALLE, FLIEDER, MINT, BLACK] },
-  { group: 'Mit Mint', name: 'Flieder & Koralle', note: 'Pastell als ruhige Fläche, satte Farben als Akzente', c: [FLIEDER, KORALLE, MINT, BLACK] },
-  { group: 'Mit Mint', name: 'Koralle & Flieder · KVP-Töne', note: 'Mit den echten KVP-Werten Coral #D15459 und Pastel Purple', c: ['#d15459', FLIEDER, MINT, BLACK] },
-  { group: 'Mit Mint', name: 'Triade weich', note: 'Mint, Flieder, Apricot: die Triade in Pastell', c: [MINT, FLIEDER, '#ffb27a', BLACK] },
-  { group: 'Mit Mint', name: 'Triade', note: 'Mint, Violett, Bernstein', c: [MINT, '#8a46e6', '#ffb51f', BLACK] },
-  { group: 'Mit Mint', name: 'Lagune', note: 'Petrol führt, Mint als Akzent, Eisblau', c: ['#0f3a47', MINT, '#8fd9ea', BLACK] },
-  { group: 'Mit Mint', name: 'Ton in Ton', note: 'Mint, Tannengrün, Minzweiß', c: [MINT, '#0d3d33', '#c3f0df', BLACK] },
+  { group: 'Lilac & Coral', name: 'Graphite', note: 'Dark base with coral and lilac only as accents. The most grown-up option', c: ['#2b2e33', CORAL, LILAC, BLACK] },
+  { group: 'Lilac & Coral', name: 'Afterglow', note: 'Midnight blue grounds the two sweet tones, like the sky after sunset', c: [LILAC, CORAL, '#1d2a44', BLACK] },
+  { group: 'Lilac & Coral', name: 'Plum', note: 'Aubergine leads, tone on tone with lilac, with coral glowing inside', c: ['#3a2440', LILAC, CORAL, BLACK] },
+  { group: 'Lilac & Coral', name: 'Teal', note: 'Dark teal is the counterpoint to coral', c: [LILAC, CORAL, '#00687f', BLACK] },
+  { group: 'Lilac & Coral', name: 'Teal leads', note: 'Teal as the dark base like Plum; the chains carry the coral', c: ['#00687f', LILAC, CORAL, BLACK] },
+  { group: 'Lilac & Coral', name: 'Sage', note: 'Muted green as a counterpoint to lilac, like a cottage garden', c: [LILAC, CORAL, '#93ab8c', BLACK] },
+  { group: 'Lilac & Coral', name: 'Butter', note: 'Yellow is the complement of lilac. Springlike and very playful', c: [LILAC, CORAL, '#f4dd8a', BLACK] },
+  { group: 'Lilac & Coral', name: 'Cream', note: 'Retro base tone; coral and lilac look like enamel on it', c: ['#efe4cc', CORAL, LILAC, BLACK] },
+  { group: 'Lilac & Coral', name: 'Porcelain', note: 'White with a silver frame, color only in small parts', c: ['#f2f1f4', LILAC, CORAL, SILVER] },
+  { group: 'Lilac & Coral', name: 'Sorbet', note: 'Peach bridges both tones. Analogous and soft, almost too sweet', c: [CORAL, LILAC, '#ffc3a0', BLACK] },
+  { group: 'Lilac & Coral', name: 'Brass', note: 'Metallic gold as a refined detail, warm like the coral', c: [LILAC, CORAL, '#d69928', BLACK] },
+  { group: 'With mint', name: 'Coral Reef · coral leads', note: 'Coral as the main color, mint as the accent', c: ['#ff5f73', MINT, '#1c2b40', BLACK] },
+  { group: 'With mint', name: 'Coral Reef · mint leads', note: 'Original order for comparison', c: [MINT, '#1c2b40', '#ff5f73', BLACK] },
+  { group: 'With mint', name: 'Coral & Lilac', note: 'Coral leads, lilac follows, mint as a detail', c: [CORAL, LILAC, MINT, BLACK] },
+  { group: 'With mint', name: 'Lilac & Coral', note: 'Pastel as a calm base, saturated colors as accents', c: [LILAC, CORAL, MINT, BLACK] },
+  { group: 'With mint', name: 'Coral & Lilac · deep coral', note: 'With a deeper coral, #D15459', c: ['#d15459', LILAC, MINT, BLACK] },
+  { group: 'With mint', name: 'Soft triad', note: 'Mint, lilac, apricot: the triad in pastel', c: [MINT, LILAC, '#ffb27a', BLACK] },
+  { group: 'With mint', name: 'Triad', note: 'Mint, violet, amber', c: [MINT, '#8a46e6', '#ffb51f', BLACK] },
+  { group: 'With mint', name: 'Lagoon', note: 'Teal leads, mint as the accent, ice blue', c: ['#0f3a47', MINT, '#8fd9ea', BLACK] },
+  { group: 'With mint', name: 'Tone on tone', note: 'Mint, forest green, mint white', c: [MINT, '#0d3d33', '#c3f0df', BLACK] },
 ];
 
 THREE.ColorManagement.legacyMode = false;
@@ -180,22 +181,25 @@ const state = { colors: PRESETS[0].c.slice(), preset: 0, panels: 'smoke', light:
 let model = null, panelMeshes = [], center = new THREE.Vector3(), size = 1;
 
 // Model is fetched only on request: show its size first, then stream it with a progress bar.
-const MODEL_URL = 'voron24.glb';
+// The deploy workflow replaces __MODEL_VERSION__ with the GLB's content hash, so a new model
+// gets a new URL (no stale HTTP cache) and a previously downloaded one is found in Cache Storage.
+const MODEL_URL = 'voron24.glb?v=__MODEL_VERSION__';
+const MODEL_CACHE = 'voron-model';
 const loaderEl = document.getElementById('loader');
 const infoEl = document.getElementById('load-info');
 const barEl = document.getElementById('load-bar');
 const btnEl = document.getElementById('load-btn');
-const mb = n => (n / 1048576).toFixed(n < 10485760 ? 1 : 0).replace('.', ',') + ' MB';
+const mb = n => (n / 1048576).toFixed(n < 10485760 ? 1 : 0) + ' MB';
 let modelBytes = 0;
 
 fetch(MODEL_URL, { method: 'HEAD' }).then(r => {
   const enc = r.headers.get('content-encoding');
   modelBytes = enc ? 0 : +r.headers.get('content-length') || 0;
-  if (modelBytes) btnEl.textContent = `Modell herunterladen (${mb(modelBytes)})`;
+  if (modelBytes) btnEl.textContent = `Download model (${mb(modelBytes)})`;
 }).catch(() => {});
 
 btnEl.onclick = async () => {
-  btnEl.disabled = true; btnEl.textContent = 'Lädt …'; barEl.hidden = false;
+  btnEl.disabled = true; btnEl.textContent = 'Loading…'; barEl.hidden = false;
   const fill = barEl.firstElementChild;
   try {
     const res = await fetch(MODEL_URL);
@@ -210,22 +214,53 @@ btnEl.onclick = async () => {
       if (done) break;
       chunks.push(value); loaded += value.length;
       if (total) fill.style.width = Math.min(100, loaded / total * 100) + '%';
-      infoEl.textContent = total ? `${mb(loaded)} von ${mb(total)} geladen` : `${mb(loaded)} geladen`;
+      infoEl.textContent = total ? `${mb(loaded)} of ${mb(total)} loaded` : `${mb(loaded)} loaded`;
     }
     const buf = new Uint8Array(loaded); let off = 0;
     for (const c of chunks) { buf.set(c, off); off += c.length; }
-    infoEl.textContent = 'Entpacke Modell …';
-    barEl.classList.add('busy'); fill.style.width = '';
-    await new Promise(r => setTimeout(r, 30)); // let the label paint before the parse blocks
-    const gltf = await new Promise((resolve, reject) => gltfLoader.parse(buf.buffer, '', resolve, reject));
-    onModel(gltf);
+    storeModel(buf);
+    await parseModel(buf.buffer);
   } catch (err) {
     console.error(err);
     barEl.hidden = true; barEl.classList.remove('busy'); fill.style.width = '0';
-    infoEl.textContent = `Modell konnte nicht geladen werden (${err.message || err}).`;
-    btnEl.disabled = false; btnEl.textContent = 'Erneut versuchen';
+    infoEl.textContent = `Could not load the model (${err.message || err}).`;
+    btnEl.disabled = false; btnEl.textContent = 'Try again';
   }
 };
+
+async function parseModel(arrayBuffer) {
+  infoEl.textContent = 'Decompressing model…';
+  barEl.hidden = false; barEl.classList.add('busy'); barEl.firstElementChild.style.width = '';
+  await new Promise(r => setTimeout(r, 30)); // let the label paint before the parse blocks
+  const gltf = await new Promise((resolve, reject) => gltfLoader.parse(arrayBuffer, '', resolve, reject));
+  onModel(gltf);
+}
+
+// Keep the downloaded model in Cache Storage (https/localhost only) and drop older versions.
+async function storeModel(buf) {
+  try {
+    const cache = await caches.open(MODEL_CACHE);
+    const url = new URL(MODEL_URL, location.href).href;
+    await cache.put(url, new Response(buf, { headers: { 'Content-Type': 'model/gltf-binary' } }));
+    for (const req of await cache.keys()) if (req.url !== url) await cache.delete(req);
+  } catch (e) { /* no Cache Storage: the button simply shows again next time */ }
+}
+
+// Already downloaded this version? Then skip the button and load it straight from the cache.
+(async () => {
+  let cached;
+  try { cached = await (await caches.open(MODEL_CACHE)).match(new URL(MODEL_URL, location.href).href); } catch (e) {}
+  if (!cached) return;
+  btnEl.hidden = true;
+  try {
+    await parseModel(await cached.arrayBuffer());
+  } catch (err) {
+    console.error(err);
+    barEl.hidden = true; barEl.classList.remove('busy');
+    infoEl.textContent = 'The saved model could not be read. Download it again.';
+    btnEl.hidden = false;
+  }
+})();
 
 const draco = new THREE.DRACOLoader();
 draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/libs/draco/');
@@ -290,7 +325,7 @@ function renderUI() {
     <div class="role">
       <input type="color" id="pick-${i}" value="${state.colors[i]}" aria-label="${r.name}">
       <span><b>${r.name}</b><small>${r.parts}</small></span>
-      <input type="text" id="hex-${i}" value="${state.colors[i]}" maxlength="7" aria-label="${r.name} Hex">
+      <input type="text" id="hex-${i}" value="${state.colors[i]}" maxlength="7" aria-label="${r.name} hex">
     </div>`).join('');
   ROLES.forEach((r, i) => {
     document.getElementById(`pick-${i}`).oninput = e => setColor(i, e.target.value);

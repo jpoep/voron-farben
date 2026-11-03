@@ -60,7 +60,7 @@ for r in g['scenes'][0]['nodes']:
 DARK = {'#0d0d0d', '#101010', '#111111', '#121212', '#141414', '#131313', '#080808', '#0b0b0b'}
 RED = {'#8d0905', '#b80704', '#8e0000', '#ab0100'}
 NOT_PRINTED = re.compile(
-    r'Fan|turbine|NEMA|Stepper|LDO-36|pcb|PCB|VHB|Raspberry Pi|Switch|Fuse|IEC GS|Jog|Screen|KW10|'
+    r'\b\d{4} (Axial )?Fan\b|Stealthburner_Fans|turbine|NEMA|Stepper|LDO-36|rgbw_led_pcb|VHB|Raspberry Pi|Switch|Fuse|IEC GS|Jog|Screen|KW10|'
     r'Microswitch|V7_wo_fan|Needle_Bearings|asxl345|LRS-200-24 / COMPOUND|c-3-1609115|8008:|8009:|'
     r'BSP Bowden|1X4_CONN|VORONDESIGN_XY-Endstop|Heatsink|Foam Tape|Filter Element|Rubber Foot|Magnet|'
     r'MGN|PRODUCT_NAME|Bed heater')

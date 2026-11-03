@@ -25,12 +25,15 @@ jobs:
       - name: Stage site
         run: |
           mkdir _site
-          cp index.html voron-paletten.html _site/
-          if [ -f voron24.glb ]; then cp voron24.glb _site/; fi
+          cp index.html palettes.html voron24.glb _site/
           # Fail loudly if LFS left a pointer file instead of the real model
-          if [ -f _site/voron24.glb ] && head -c 100 _site/voron24.glb | grep -q 'git-lfs'; then
+          if head -c 100 _site/voron24.glb | grep -q 'git-lfs'; then
             echo "voron24.glb is an LFS pointer, not the model"; exit 1
           fi
+          # Version the model URL with its content hash so browsers never reuse a stale copy
+          version=$(sha256sum _site/voron24.glb | cut -c1-12)
+          sed -i "s/__MODEL_VERSION__/$version/" _site/index.html
+          grep -q "voron24.glb?v=$version" _site/index.html
       - uses: actions/upload-pages-artifact@v5
 
   deploy:
