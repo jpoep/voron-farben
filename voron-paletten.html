@@ -1,0 +1,426 @@
+<title>Voron Mint-Paletten</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: Werkbank – links eine stehende Vorschau des Druckers, rechts das Musterbrett mit Paletten-Karten */
+:root {
+  --bg: #eef1f0;
+  --surface: #ffffff;
+  --fg: #142019;
+  --muted: #56635e;
+  --line: #d3dbd8;
+  --scene: #dde4e1;
+  --ink: #007457;          /* Mint, dunkel genug für Text */
+  --base: #00ca97;         /* Rusamant ASA */
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1311; --surface: #161d1a; --fg: #e2eae6; --muted: #93a29c;
+    --line: #29332f; --scene: #1b2420; --ink: #45e0b6; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1311; --surface: #161d1a; --fg: #e2eae6; --muted: #93a29c;
+  --line: #29332f; --scene: #1b2420; --ink: #45e0b6; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: 28px; }
+
+header { display: grid; gap: 10px; max-width: 70ch; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+}
+h1 {
+  font-family: var(--font-display); font-stretch: 118%; font-weight: 800;
+  font-size: clamp(30px, 5vw, 46px); line-height: 1.02; margin: 0;
+  text-wrap: balance; letter-spacing: -.01em;
+}
+h1 .mint { color: var(--ink); }
+header p { margin: 0; color: var(--muted); }
+.base-chip {
+  display: inline-flex; align-items: center; gap: 10px; justify-self: start;
+  padding: 6px 12px 6px 6px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); font-size: 13px;
+}
+.base-chip i { width: 22px; height: 22px; border-radius: 50%; background: var(--base); display: block; }
+.mono { font-family: var(--font-mono); font-size: .92em; }
+
+.layout { display: grid; grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* Vorschau */
+.stage {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
+  display: grid; gap: 14px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 16px;
+}
+@media (max-width: 860px) { .stage { position: static; } }
+.stage-title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.stage-title h2 { font-family: var(--font-display); font-stretch: 112%; font-size: 20px; margin: 0; }
+.stage-title span { color: var(--muted); font-size: 13px; }
+.scene { background: var(--scene); border-radius: 8px; padding: 12px; }
+.scene svg { display: block; width: 100%; height: auto; max-width: 100%; }
+.scene .p { fill: var(--c-p); }
+.scene .a { fill: var(--c-a); }
+.scene .d { fill: var(--c-d); }
+.scene .p, .scene .a, .scene .d { stroke: rgba(0,0,0,.28); stroke-width: 1; }
+.scene .fr { fill: var(--frame); }
+.scene .panel { fill: var(--panel); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; }
+.seg { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.seg-btns { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg-btns button {
+  font: inherit; font-size: 13px; color: var(--fg); background: transparent;
+  border: 0; padding: 5px 10px; cursor: pointer;
+}
+.seg-btns button + button { border-left: 1px solid var(--line); }
+.seg-btns button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+
+.roles { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.role { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.role .sw { width: 34px; height: 34px; border-radius: 7px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.14); }
+.role b { display: block; font-size: 14px; }
+.role small { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.role .val { text-align: right; font-size: 12px; }
+.role .val span { display: block; }
+.role .val .mono { color: var(--muted); }
+.swaps { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn {
+  font: inherit; font-size: 13px; color: var(--fg); background: transparent;
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer;
+}
+.btn:hover { border-color: var(--muted); }
+.fine { margin: 0; font-size: 12px; color: var(--muted); }
+
+/* Musterbrett */
+.board { display: grid; gap: 14px; min-width: 0; }
+.board-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.board-head h2 { font-family: var(--font-display); font-stretch: 112%; font-size: 20px; margin: 0; }
+.board-head span { color: var(--muted); font-size: 13px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+
+.card {
+  display: flex; flex-direction: column; gap: 10px; text-align: left;
+  font: inherit; color: inherit; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 14px;
+  cursor: pointer; transition: border-color .15s, transform .15s;
+}
+.card:hover { border-color: var(--muted); }
+.card[aria-pressed="true"], .card.is-selected { border-color: var(--fg); box-shadow: 0 0 0 1px var(--fg); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card-name { font-family: var(--font-display); font-stretch: 110%; font-weight: 700; font-size: 17px; }
+.tag {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--muted); white-space: nowrap;
+}
+.strip { display: flex; height: 54px; border-radius: 7px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+.strip span { display: block; transition: flex-grow .25s; }
+.chips { display: grid; gap: 3px; }
+.chip { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; }
+.chip .dot { width: 12px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+.chip .hex { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); line-height: 1.45; }
+
+.custom-inputs { display: grid; gap: 6px; }
+.custom-inputs label { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; }
+.custom-inputs input[type="color"] { width: 34px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; }
+.custom-inputs .hex { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) { .card, .strip span { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Voron 2.4 · 300 mm · Farbschema</div>
+    <h1>Was passt zu <span class="mint">Mint</span>?</h1>
+    <p>Elf Paletten aus je drei Farben rund um deine Grundfarbe. Wähle eine Karte, tausch die Rollen und prüf das Ganze mit schwarzem oder silbernem Rahmen. Ob es die Töne als ABS/ASA gibt, klären wir danach.</p>
+    <span class="base-chip"><i></i>Rusamant ASA · <span class="mono">#00CA97</span></span>
+  </header>
+
+  <div class="layout">
+    <section class="stage" aria-label="Vorschau">
+      <div class="stage-title">
+        <h2 id="stage-name">Werkstatt</h2>
+        <span id="stage-type">Neutral</span>
+      </div>
+      <div class="scene">
+        <svg id="printer" viewBox="0 0 420 490" role="img" aria-label="Vereinfachte Frontansicht eines Voron 2.4 in der gewählten Palette">
+          <!-- Rückwand -->
+          <rect x="50" y="60" width="320" height="320" fill="#1a1e20"/>
+          <!-- Z-Riemen -->
+          <rect x="73" y="176" width="4" height="164" fill="#0b0d0e"/>
+          <rect x="343" y="176" width="4" height="164" fill="#0b0d0e"/>
+          <!-- Bett -->
+          <rect x="96" y="294" width="228" height="12" rx="2" fill="#3a4043"/>
+          <rect x="100" y="288" width="220" height="6" rx="1" fill="#8a7653"/>
+          <rect x="150" y="306" width="10" height="74" fill="#2a2f31"/>
+          <rect x="260" y="306" width="10" height="74" fill="#2a2f31"/>
+          <!-- Z-Antriebe -->
+          <rect class="p" x="50" y="334" width="56" height="46" rx="4"/>
+          <rect x="60" y="344" width="28" height="28" rx="2" fill="#2c3235"/>
+          <rect class="p" x="314" y="334" width="56" height="46" rx="4"/>
+          <rect x="332" y="344" width="28" height="28" rx="2" fill="#2c3235"/>
+          <!-- A/B-Antriebe -->
+          <rect class="p" x="50" y="60" width="64" height="46" rx="4"/>
+          <rect x="60" y="68" width="30" height="30" rx="2" fill="#2c3235"/>
+          <rect class="p" x="306" y="60" width="64" height="46" rx="4"/>
+          <rect x="330" y="68" width="30" height="30" rx="2" fill="#2c3235"/>
+          <!-- Gantry -->
+          <rect class="fr" x="90" y="150" width="240" height="16"/>
+          <rect x="90" y="157" width="240" height="2" fill="rgba(0,0,0,.25)"/>
+          <rect class="p" x="52" y="134" width="46" height="48" rx="6"/>
+          <circle class="d" cx="75" cy="158" r="6"/>
+          <rect class="p" x="322" y="134" width="46" height="48" rx="6"/>
+          <circle class="d" cx="345" cy="158" r="6"/>
+          <!-- Stealthburner -->
+          <rect class="p" x="176" y="102" width="68" height="108" rx="16"/>
+          <path class="a" d="M188 116 h44 a8 8 0 0 1 8 8 v54 l-14 18 h-32 l-14 -18 v-54 a8 8 0 0 1 8 -8z"/>
+          <path class="d" d="M210 126 l13 7.5 v15 l-13 7.5 l-13 -7.5 v-15z"/>
+          <rect x="194" y="170" width="32" height="5" rx="2" fill="#101314"/>
+          <rect x="198" y="180" width="24" height="5" rx="2" fill="#101314"/>
+          <path d="M204 210 h12 l-3 10 h-6z" fill="#c9a24a"/>
+          <!-- Türen / Panels -->
+          <rect class="panel" x="50" y="60" width="320" height="320"/>
+          <rect x="209.5" y="60" width="1" height="320" fill="rgba(255,255,255,.18)"/>
+          <!-- Rahmen -->
+          <rect class="fr" x="30" y="40" width="360" height="20"/>
+          <rect class="fr" x="30" y="380" width="360" height="20"/>
+          <rect class="fr" x="30" y="40" width="20" height="360"/>
+          <rect class="fr" x="370" y="40" width="20" height="360"/>
+          <rect x="30" y="49" width="360" height="2" fill="rgba(0,0,0,.22)"/>
+          <rect x="30" y="389" width="360" height="2" fill="rgba(0,0,0,.22)"/>
+          <rect x="39" y="40" width="2" height="360" fill="rgba(0,0,0,.22)"/>
+          <rect x="379" y="40" width="2" height="360" fill="rgba(0,0,0,.22)"/>
+          <!-- Panel-Clips -->
+          <rect class="d" x="100" y="44" width="16" height="12" rx="2"/>
+          <rect class="d" x="202" y="44" width="16" height="12" rx="2"/>
+          <rect class="d" x="304" y="44" width="16" height="12" rx="2"/>
+          <rect class="d" x="100" y="384" width="16" height="12" rx="2"/>
+          <rect class="d" x="304" y="384" width="16" height="12" rx="2"/>
+          <!-- Scharniere -->
+          <rect class="d" x="42" y="96" width="16" height="32" rx="3"/>
+          <rect class="d" x="42" y="308" width="16" height="32" rx="3"/>
+          <rect class="d" x="362" y="96" width="16" height="32" rx="3"/>
+          <rect class="d" x="362" y="308" width="16" height="32" rx="3"/>
+          <!-- Türgriffe -->
+          <rect class="a" x="192" y="200" width="10" height="60" rx="5"/>
+          <rect class="a" x="218" y="200" width="10" height="60" rx="5"/>
+          <!-- Skirts -->
+          <path class="p" d="M30 400 h360 v50 a6 6 0 0 1 -6 6 h-348 a6 6 0 0 1 -6 -6z"/>
+          <g class="d">
+            <rect x="58" y="412" width="6" height="32" rx="2"/><rect x="72" y="412" width="6" height="32" rx="2"/>
+            <rect x="86" y="412" width="6" height="32" rx="2"/><rect x="100" y="412" width="6" height="32" rx="2"/>
+            <rect x="114" y="412" width="6" height="32" rx="2"/><rect x="128" y="412" width="6" height="32" rx="2"/>
+            <rect x="286" y="412" width="6" height="32" rx="2"/><rect x="300" y="412" width="6" height="32" rx="2"/>
+            <rect x="314" y="412" width="6" height="32" rx="2"/><rect x="328" y="412" width="6" height="32" rx="2"/>
+            <rect x="342" y="412" width="6" height="32" rx="2"/><rect x="356" y="412" width="6" height="32" rx="2"/>
+          </g>
+          <rect class="a" x="166" y="405" width="88" height="44" rx="6"/>
+          <rect x="174" y="412" width="72" height="30" rx="2" fill="#0b1714"/>
+          <rect x="180" y="418" width="38" height="3" rx="1" fill="#6fcfb6"/>
+          <rect x="180" y="425" width="56" height="3" rx="1" fill="#3f8a77"/>
+          <rect x="180" y="432" width="30" height="3" rx="1" fill="#3f8a77"/>
+          <!-- Füße -->
+          <rect class="d" x="44" y="456" width="36" height="14" rx="3"/>
+          <rect class="d" x="340" y="456" width="36" height="14" rx="3"/>
+        </svg>
+      </div>
+
+      <div class="controls">
+        <div class="seg">Rahmen
+          <span class="seg-btns" data-key="frame">
+            <button type="button" id="frame-black" data-val="black">Schwarz</button>
+            <button type="button" id="frame-silver" data-val="silver">Silber</button>
+          </span>
+        </div>
+        <div class="seg">Panels
+          <span class="seg-btns" data-key="panel">
+            <button type="button" id="panel-smoke" data-val="smoke">Rauchglas</button>
+            <button type="button" id="panel-clear" data-val="clear">Klar</button>
+          </span>
+        </div>
+      </div>
+
+      <ul class="roles" id="roles"></ul>
+
+      <div class="swaps">
+        <button type="button" class="btn" id="swap-pa">Haupt ⇄ Akzent</button>
+        <button type="button" class="btn" id="swap-ad">Akzent ⇄ Details</button>
+      </div>
+      <p class="fine">Die Anteile folgen der 60-30-10-Faustregel für die Druckteile. Rahmen und Rückwand kommen optisch noch dazu, deshalb wirken dunkle Hauptfarben am echten Drucker ruhiger als hier.</p>
+    </section>
+
+    <section class="board" aria-label="Paletten">
+      <div class="board-head">
+        <h2>Musterbrett</h2>
+        <span>Grundfarbe + zwei Ergänzungen</span>
+      </div>
+      <div class="grid" id="grid"></div>
+      <p class="fine">Bildschirmfarben weichen vom gedruckten Filament ab, besonders bei Mint und Pastelltönen. Vor dem Kauf Musterkarten oder Fotos echter Drucke vergleichen.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+const BASE = '#00ca97';
+const ROLES = [
+  { key: 'p', name: 'Hauptteile', share: 6, pct: '≈ 60 %', parts: 'Skirts, XY-Joints, A/B- und Z-Antriebe, Toolhead-Körper' },
+  { key: 'a', name: 'Akzent', share: 3, pct: '≈ 30 %', parts: 'Toolhead-Front, Türgriffe, Display-Rahmen' },
+  { key: 'd', name: 'Details', share: 1, pct: '≈ 10 %', parts: 'Panel-Clips, Scharniere, Füße, Lüftungsgitter, LED-Diffusor' },
+];
+// colors[0] ist immer die Grundfarbe; order = Index pro Rolle [Haupt, Akzent, Details]
+const PALETTES = [
+  { id: 'werkstatt', name: 'Werkstatt', type: 'Neutral',
+    colors: [BASE, '#2b3033', '#d3d9d7'], names: ['Rusamant Mint', 'Anthrazit', 'Lichtgrau'], order: [1, 0, 2],
+    note: 'Der klassische Voron-Aufbau: dunkle Teile, Mint als Akzent. Zeitlos und mit jedem Rahmen stimmig.' },
+  { id: 'diner', name: 'Fifties Diner', type: 'Retro',
+    colors: [BASE, '#efe4cc', '#d42a3c'], names: ['Rusamant Mint', 'Creme', 'Kirschrot'], order: [0, 1, 2],
+    note: 'Mint und Creme wie ein alter Kühlschrank, Kirschrot nur in Kleinteilen. Das Rot zitiert das Voron-Original.' },
+  { id: 'koralle', name: 'Korallenriff', type: 'Komplementär',
+    colors: [BASE, '#1c2b40', '#ff5f73'], names: ['Rusamant Mint', 'Marineblau', 'Koralle'], order: [0, 1, 2],
+    note: 'Koralle liegt Mint auf dem Farbkreis fast gegenüber (≈350° zu 165°). Marine dämpft die Spannung.' },
+  { id: 'boxengasse', name: 'Boxengasse', type: 'Warm/Kalt',
+    colors: [BASE, '#1f2326', '#ff6a13'], names: ['Rusamant Mint', 'Graphit', 'Signalorange'], order: [1, 0, 2],
+    note: 'Motorsport-Look. Orange in kleinen Dosen lenkt den Blick auf Griffe und Toolhead.' },
+  { id: 'morgensonne', name: 'Morgensonne', type: 'Frisch',
+    colors: [BASE, '#1d2a44', '#ffd23f'], names: ['Rusamant Mint', 'Nachtblau', 'Sonnengelb'], order: [0, 1, 2],
+    note: 'Gelb und Mint sind beide hell und fröhlich, Nachtblau gibt dem Ganzen Gewicht.' },
+  { id: 'lagune', name: 'Lagune', type: 'Analog',
+    colors: [BASE, '#0f3a47', '#8fd9ea'], names: ['Rusamant Mint', 'Petrol', 'Eisblau'], order: [1, 0, 2],
+    note: 'Nachbarn auf dem Farbkreis: alles kühl, alles Wasser. Sehr harmonisch, wenig Reibung.' },
+  { id: 'tonintonm', name: 'Ton in Ton', type: 'Monochrom',
+    colors: [BASE, '#0d3d33', '#c3f0df'], names: ['Rusamant Mint', 'Tannengrün', 'Minzweiß'], order: [0, 1, 2],
+    note: 'Ein Farbton in drei Helligkeiten. Wirkt edel und ruhig, solange die Abstufung deutlich bleibt.' },
+  { id: 'nachtschicht', name: 'Nachtschicht', type: 'Kühl',
+    colors: [BASE, '#2a1f4d', '#eef0f3'], names: ['Rusamant Mint', 'Tiefviolett', 'Weiß'], order: [1, 0, 2],
+    note: 'Dunkles Violett statt Schwarz bringt Tiefe, ohne düster zu werden. Mint leuchtet darauf besonders.' },
+  { id: 'gletscher', name: 'Gletscher', type: 'Hell',
+    colors: [BASE, '#f3f5f5', '#8b979b'], names: ['Rusamant Mint', 'Weiß', 'Kühlgrau'], order: [1, 0, 2],
+    note: 'Hell und clean, wirkt wie ein Laborgerät. Am besten mit silbernem Rahmen und klaren Panels.' },
+  { id: 'triade', name: 'Triade', type: 'Triadisch',
+    colors: [BASE, '#8a46e6', '#ffb51f'], names: ['Rusamant Mint', 'Violett', 'Bernstein'], order: [0, 1, 2],
+    note: 'Drei gleichmäßig verteilte Farbtöne. Laut und verspielt, funktioniert nur mit klarer Hierarchie.' },
+  { id: 'split', name: 'Neon-Garage', type: 'Split-Komplementär',
+    colors: [BASE, '#d93fa9', '#ff5b3a'], names: ['Rusamant Mint', 'Magenta', 'Orangerot'], order: [0, 1, 2],
+    note: 'Die beiden Nachbarn der Komplementärfarbe. Maximaler Kontrast, eher Statement als Werkzeug.' },
+];
+const CUSTOM = { id: 'eigene', name: 'Eigene Palette', type: 'Zum Ausprobieren', order: [0, 1, 2],
+  names: ['Rusamant Mint', 'Eigene Farbe 1', 'Eigene Farbe 2'] };
+const FRAMES = { black: '#17191a', silver: '#b4babd' };
+const PANELS = { smoke: 'rgba(16,20,22,.42)', clear: 'rgba(225,238,242,.10)' };
+
+const state = { id: 'werkstatt', frame: 'black', panel: 'smoke', custom: ['#3a3f58', '#f2c14e'], orders: {} };
+try {
+  const saved = JSON.parse(localStorage.getItem('voron-paletten') || 'null');
+  if (saved) Object.assign(state, saved);
+} catch (e) {}
+function save() { try { localStorage.setItem('voron-paletten', JSON.stringify(state)); } catch (e) {} }
+
+const all = () => [...PALETTES, CUSTOM];
+const byId = id => all().find(p => p.id === id) || PALETTES[0];
+const colorsOf = p => p.id === 'eigene' ? [BASE, ...state.custom] : p.colors;
+const orderOf = p => state.orders[p.id] || p.order;
+const up = h => h.toUpperCase();
+
+function stripHTML(p) {
+  const c = colorsOf(p), o = orderOf(p);
+  return ROLES.map((r, i) => `<span style="flex-grow:${r.share};background:${c[o[i]]}"></span>`).join('');
+}
+
+function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = PALETTES.map(p => `
+    <button type="button" class="card" data-id="${p.id}" aria-pressed="false">
+      <span class="card-head"><span class="card-name">${p.name}</span><span class="tag">${p.type}</span></span>
+      <span class="strip">${stripHTML(p)}</span>
+      <span class="chips">${p.colors.map((c, i) => `
+        <span class="chip"><span class="dot" style="background:${c}"></span><span>${p.names[i]}</span><span class="hex">${up(c)}</span></span>`).join('')}
+      </span>
+      <span class="note">${p.note}</span>
+    </button>`).join('') + `
+    <div class="card" data-id="eigene" id="custom-card">
+      <span class="card-head"><span class="card-name">${CUSTOM.name}</span><span class="tag">${CUSTOM.type}</span></span>
+      <span class="strip">${stripHTML(CUSTOM)}</span>
+      <div class="custom-inputs">
+        <label><span class="dot" style="width:34px;height:26px;border-radius:6px;background:${BASE};box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)"></span><span>Rusamant Mint</span><span class="hex">#00CA97</span></label>
+        <label for="custom-1"><input type="color" id="custom-1" value="${state.custom[0]}"><span>Eigene Farbe 1</span><span class="hex" id="custom-1-hex">${up(state.custom[0])}</span></label>
+        <label for="custom-2"><input type="color" id="custom-2" value="${state.custom[1]}"><span>Eigene Farbe 2</span><span class="hex" id="custom-2-hex">${up(state.custom[1])}</span></label>
+      </div>
+      <button type="button" class="btn" id="custom-show">In der Vorschau zeigen</button>
+    </div>`;
+
+  grid.querySelectorAll('button.card').forEach(b => b.addEventListener('click', () => select(b.dataset.id)));
+  document.getElementById('custom-show').addEventListener('click', () => select('eigene'));
+  [0, 1].forEach(i => {
+    document.getElementById(`custom-${i + 1}`).addEventListener('input', e => {
+      state.custom[i] = e.target.value;
+      document.getElementById(`custom-${i + 1}-hex`).textContent = up(e.target.value);
+      select('eigene');
+    });
+  });
+}
+
+function select(id) { state.id = id; update(); save(); }
+
+function update() {
+  const p = byId(state.id), c = colorsOf(p), o = orderOf(p);
+  const svg = document.getElementById('printer');
+  ROLES.forEach((r, i) => svg.style.setProperty(`--c-${r.key}`, c[o[i]]));
+  svg.style.setProperty('--frame', FRAMES[state.frame]);
+  svg.style.setProperty('--panel', PANELS[state.panel]);
+
+  document.getElementById('stage-name').textContent = p.name;
+  document.getElementById('stage-type').textContent = p.type;
+  document.getElementById('roles').innerHTML = ROLES.map((r, i) => `
+    <li class="role">
+      <span class="sw" style="background:${c[o[i]]}"></span>
+      <span><b>${r.name} <span class="mono" style="font-weight:400;color:var(--muted)">${r.pct}</span></b><small>${r.parts}</small></span>
+      <span class="val"><span>${p.names[o[i]]}</span><span class="mono">${up(c[o[i]])}</span></span>
+    </li>`).join('');
+
+  document.querySelectorAll('#grid .card').forEach(el => {
+    const on = el.dataset.id === p.id;
+    if (el.tagName === 'BUTTON') el.setAttribute('aria-pressed', on);
+    else el.classList.toggle('is-selected', on);
+    if (on) el.querySelector('.strip').innerHTML = stripHTML(p);
+  });
+  document.querySelectorAll('.seg-btns').forEach(g => {
+    g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.val === state[g.dataset.key]));
+  });
+}
+
+function swap(i, j) {
+  const p = byId(state.id), o = orderOf(p).slice();
+  [o[i], o[j]] = [o[j], o[i]];
+  state.orders[p.id] = o;
+  update(); save();
+}
+document.getElementById('swap-pa').addEventListener('click', () => swap(0, 1));
+document.getElementById('swap-ad').addEventListener('click', () => swap(1, 2));
+document.querySelectorAll('.seg-btns').forEach(g => {
+  g.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    state[g.dataset.key] = b.dataset.val; update(); save();
+  });
+});
+
+render();
+update();
+</script>

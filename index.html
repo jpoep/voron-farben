@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voron Farbprobe 3D</title>
+<style>
+  :root {
+    --bg: #eef1f0; --panel: #ffffff; --fg: #142019; --muted: #56635e; --line: #d3dbd8; --ink: #007457;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font: 14px/1.45 "Archivo", "Helvetica Neue", Arial, sans-serif;
+    display: grid; grid-template-columns: 340px minmax(0, 1fr);
+  }
+  aside { background: var(--panel); border-right: 1px solid var(--line); padding: 18px; overflow-y: auto; display: grid; gap: 18px; align-content: start; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+  p.fine { font-size: 12px; color: var(--muted); margin: 0; }
+  .presets { display: grid; gap: 6px; }
+  .preset {
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; text-align: left;
+    font: inherit; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 10px; cursor: pointer;
+  }
+  .preset:hover { border-color: var(--muted); }
+  .group { font-size: 13px; margin: 8px 0 0; }
+  .group:first-child { margin-top: 0; }
+  .preset[aria-pressed="true"] { border-color: var(--fg); box-shadow: 0 0 0 1px var(--fg); }
+  .preset small { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+  .bar { display: flex; width: 74px; height: 18px; border-radius: 4px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+  .bar span { display: block; }
+  .roles { display: grid; gap: 8px; }
+  .role { display: grid; grid-template-columns: 40px 1fr 86px; gap: 8px; align-items: center; }
+  .role input[type=color] { width: 40px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; }
+  .role input[type=text] { font: 12px ui-monospace, Menlo, monospace; padding: 5px 6px; border: 1px solid var(--line); border-radius: 6px; width: 100%; text-transform: uppercase; }
+  .role b { display: block; font-size: 13px; }
+  .role small { display: block; font-size: 11px; color: var(--muted); line-height: 1.3; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { font: inherit; font-size: 13px; background: transparent; color: var(--fg); border: 0; padding: 5px 10px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: 13px; color: var(--muted); }
+  .btn { font: inherit; font-size: 13px; border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+  main { position: relative; min-width: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+  #loader { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; }
+  #loader .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; width: min(360px, 100%); display: grid; gap: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+  #loader .card p { margin: 0; color: var(--muted); font-size: 13px; }
+  #loader .card b { font-size: 15px; }
+  #load-btn { font: inherit; font-weight: 600; background: var(--ink); color: #fff; border: 0; border-radius: 8px; padding: 9px 14px; cursor: pointer; justify-self: start; }
+  #load-btn:disabled { opacity: .5; cursor: default; }
+  .progress { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .progress span { display: block; height: 100%; width: 0; background: var(--ink); }
+  .progress.busy span { width: 35%; animation: busy 1.1s ease-in-out infinite; }
+  @keyframes busy { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
+  @media (max-width: 800px) {
+    body { grid-template-columns: 1fr; grid-template-rows: 55vh auto; }
+    main { grid-row: 1; }
+    aside { border-right: 0; border-top: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<aside>
+  <div>
+    <h1>Voron Farbprobe 3D</h1>
+    <p class="fine">Modell: offizielles Voron-2.4r2-CAD von <a href="https://github.com/VoronDesign/Voron-2">Voron Design</a> (GPL-3.0).</p>
+  </div>
+
+  <section>
+    <h2>Paletten</h2>
+    <div class="presets" id="presets"></div>
+  </section>
+
+  <section>
+    <h2>Farben</h2>
+    <div class="roles" id="roles"></div>
+  </section>
+
+  <section>
+    <h2>Ansicht</h2>
+    <div class="row" style="margin-bottom:8px">Panels
+      <span class="seg" data-key="panels">
+        <button data-val="smoke">Rauchglas</button><button data-val="clear">Klar</button><button data-val="off">Aus</button>
+      </span>
+    </div>
+    <div class="row" style="margin-bottom:8px">Licht
+      <span class="seg" data-key="light">
+        <button data-val="day">Tag</button><button data-val="room">Zimmer</button>
+      </span>
+    </div>
+    <div class="row">
+      <button class="btn" id="view-front">Vorne</button>
+      <button class="btn" id="view-angle">Schräg</button>
+      <button class="btn" id="view-top">Oben</button>
+    </div>
+  </section>
+
+  <p class="fine">Farbangaben sind Bildschirmwerte. Gedrucktes ABS/ASA ist matter und meist etwas dunkler, besonders bei Pastelltönen.</p>
+</aside>
+
+<main>
+  <canvas id="c"></canvas>
+  <div id="loader">
+    <div class="card">
+      <b>3D-Modell laden</b>
+      <p id="load-info">Das Modell des Voron 2.4 wird erst auf Klick heruntergeladen.</p>
+      <div class="progress" id="load-bar" hidden><span></span></div>
+      <button id="load-btn">Modell herunterladen</button>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/DRACOLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<script>
+const MINT = '#00ca97';
+const ROLES = [
+  { key: '1_first_color',  name: 'Primär',  parts: 'Hauptteile: Skirts, Antriebe, Joints, Toolhead-Körper' },
+  { key: '2_second_color', name: 'Akzent',  parts: 'Voron-[a]-Teile: Clips, Griffe, Toolhead-Front, Abdeckungen' },
+  { key: '3_chains',       name: 'Ketten',  parts: 'Gedruckte Zip-Chains' },
+  { key: '4_frame',        name: 'Rahmen',  parts: '2020-Profile' },
+];
+// [Primär, Akzent, Ketten, Rahmen]
+const FLIEDER = '#ac96c6', KORALLE = '#f2707a', BLACK = '#222324', SILVER = '#b4babd';
+const PRESETS = [
+  { group: 'Flieder & Koralle', name: 'Graphit', note: 'Dunkle Fläche, Koralle und Flieder nur als Akzente. Die erwachsenste Variante', c: ['#2b2e33', KORALLE, FLIEDER, BLACK] },
+  { group: 'Flieder & Koralle', name: 'Abendrot', note: 'Nachtblau erdet die beiden süßen Töne, wie ein Himmel nach Sonnenuntergang', c: [FLIEDER, KORALLE, '#1d2a44', BLACK] },
+  { group: 'Flieder & Koralle', name: 'Pflaume', note: 'Aubergine führt, Ton in Ton mit Flieder, Koralle glüht darin', c: ['#3a2440', FLIEDER, KORALLE, BLACK] },
+  { group: 'Flieder & Koralle', name: 'Petrol', note: 'Dunkeltürkis ist der Gegenpol zur Koralle (KVP Dark Teal)', c: [FLIEDER, KORALLE, '#00687f', BLACK] },
+  { group: 'Flieder & Koralle', name: 'Petrol führt', note: 'Petrol als dunkle Grundfläche wie bei Pflaume, die Ketten tragen die Koralle', c: ['#00687f', FLIEDER, KORALLE, BLACK] },  { group: 'Flieder & Koralle', name: 'Salbei', note: 'Gedecktes Grün als Gegenpol zum Flieder, wie ein Bauerngarten', c: [FLIEDER, KORALLE, '#93ab8c', BLACK] },
+  { group: 'Flieder & Koralle', name: 'Butter', note: 'Gelb ist Flieders Komplementärfarbe. Frühlingshaft und sehr verspielt', c: [FLIEDER, KORALLE, '#f4dd8a', BLACK] },
+  { group: 'Flieder & Koralle', name: 'Creme', note: 'Retro-Grundton, Koralle und Flieder wirken darauf wie Emaille', c: ['#efe4cc', KORALLE, FLIEDER, BLACK] },
+  { group: 'Flieder & Koralle', name: 'Porzellan', note: 'Weiß mit silbernem Rahmen, die Farben nur in Kleinteilen', c: ['#f2f1f4', FLIEDER, KORALLE, SILVER] },
+  { group: 'Flieder & Koralle', name: 'Sorbet', note: 'Pfirsich verbindet beide Töne. Analog und weich, fast zu süß', c: [KORALLE, FLIEDER, '#ffc3a0', BLACK] },
+  { group: 'Flieder & Koralle', name: 'Messing', note: 'Metallic Gold (KVP) als edles Detail, warm wie die Koralle', c: [FLIEDER, KORALLE, '#d69928', BLACK] },
+  { group: 'Mit Mint', name: 'Korallenriff · Koralle führt', note: 'Dein Favorit mit Koralle als Hauptfarbe', c: ['#ff5f73', MINT, '#1c2b40', BLACK] },
+  { group: 'Mit Mint', name: 'Korallenriff · Mint führt', note: 'Original-Reihenfolge zum Vergleich', c: [MINT, '#1c2b40', '#ff5f73', BLACK] },
+  { group: 'Mit Mint', name: 'Koralle & Flieder', note: 'Koralle führt, Flieder begleitet, Mint als Detail', c: [KORALLE, FLIEDER, MINT, BLACK] },
+  { group: 'Mit Mint', name: 'Flieder & Koralle', note: 'Pastell als ruhige Fläche, satte Farben als Akzente', c: [FLIEDER, KORALLE, MINT, BLACK] },
+  { group: 'Mit Mint', name: 'Koralle & Flieder · KVP-Töne', note: 'Mit den echten KVP-Werten Coral #D15459 und Pastel Purple', c: ['#d15459', FLIEDER, MINT, BLACK] },
+  { group: 'Mit Mint', name: 'Triade weich', note: 'Mint, Flieder, Apricot: die Triade in Pastell', c: [MINT, FLIEDER, '#ffb27a', BLACK] },
+  { group: 'Mit Mint', name: 'Triade', note: 'Mint, Violett, Bernstein', c: [MINT, '#8a46e6', '#ffb51f', BLACK] },
+  { group: 'Mit Mint', name: 'Lagune', note: 'Petrol führt, Mint als Akzent, Eisblau', c: ['#0f3a47', MINT, '#8fd9ea', BLACK] },
+  { group: 'Mit Mint', name: 'Ton in Ton', note: 'Mint, Tannengrün, Minzweiß', c: [MINT, '#0d3d33', '#c3f0df', BLACK] },
+];
+
+THREE.ColorManagement.legacyMode = false;
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#e9edeb');
+const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true;
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envTex = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+const hemi = new THREE.HemisphereLight(0xffffff, 0xb0b8b4, 0.5);
+const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+sun.position.set(-3, 5, 4);
+scene.add(hemi, sun);
+
+const mats = {};
+ROLES.forEach(r => {
+  mats[r.key] = new THREE.MeshStandardMaterial({ color: '#cccccc', roughness: r.key === '4_frame' ? 0.45 : 0.62, metalness: r.key === '4_frame' ? 0.35 : 0 });
+});
+const panelMat = new THREE.MeshStandardMaterial({ color: '#2a2f31', roughness: 0.08, transparent: true, opacity: 0.45, depthWrite: false });
+
+const state = { colors: PRESETS[0].c.slice(), preset: 0, panels: 'smoke', light: 'day' };
+let model = null, panelMeshes = [], center = new THREE.Vector3(), size = 1;
+
+// Model is fetched only on request: show its size first, then stream it with a progress bar.
+const MODEL_URL = 'voron24.glb';
+const loaderEl = document.getElementById('loader');
+const infoEl = document.getElementById('load-info');
+const barEl = document.getElementById('load-bar');
+const btnEl = document.getElementById('load-btn');
+const mb = n => (n / 1048576).toFixed(n < 10485760 ? 1 : 0).replace('.', ',') + ' MB';
+let modelBytes = 0;
+
+fetch(MODEL_URL, { method: 'HEAD' }).then(r => {
+  const enc = r.headers.get('content-encoding');
+  modelBytes = enc ? 0 : +r.headers.get('content-length') || 0;
+  if (modelBytes) btnEl.textContent = `Modell herunterladen (${mb(modelBytes)})`;
+}).catch(() => {});
+
+btnEl.onclick = async () => {
+  btnEl.disabled = true; btnEl.textContent = 'Lädt …'; barEl.hidden = false;
+  const fill = barEl.firstElementChild;
+  try {
+    const res = await fetch(MODEL_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    // With gzip/br, Content-Length is the compressed size, so it can't be used as the total.
+    const total = res.headers.get('content-encoding') ? modelBytes : (+res.headers.get('content-length') || modelBytes);
+    if (!total) barEl.classList.add('busy');
+    const reader = res.body.getReader();
+    const chunks = []; let loaded = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value); loaded += value.length;
+      if (total) fill.style.width = Math.min(100, loaded / total * 100) + '%';
+      infoEl.textContent = total ? `${mb(loaded)} von ${mb(total)} geladen` : `${mb(loaded)} geladen`;
+    }
+    const buf = new Uint8Array(loaded); let off = 0;
+    for (const c of chunks) { buf.set(c, off); off += c.length; }
+    infoEl.textContent = 'Entpacke Modell …';
+    barEl.classList.add('busy'); fill.style.width = '';
+    await new Promise(r => setTimeout(r, 30)); // let the label paint before the parse blocks
+    const gltf = await new Promise((resolve, reject) => gltfLoader.parse(buf.buffer, '', resolve, reject));
+    onModel(gltf);
+  } catch (err) {
+    console.error(err);
+    barEl.hidden = true; barEl.classList.remove('busy'); fill.style.width = '0';
+    infoEl.textContent = `Modell konnte nicht geladen werden (${err.message || err}).`;
+    btnEl.disabled = false; btnEl.textContent = 'Erneut versuchen';
+  }
+};
+
+const draco = new THREE.DRACOLoader();
+draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/libs/draco/');
+const gltfLoader = new THREE.GLTFLoader();
+gltfLoader.setDRACOLoader(draco);
+
+function onModel(gltf) {
+  model = gltf.scene;
+  model.traverse(o => {
+    if (!o.isMesh) return;
+    // Roles are carried by material names; everything else keeps its CAD colour from the GLB.
+    const name = (o.material && o.material.name) || '';
+    if (mats[name]) o.material = mats[name];
+    else if (name === 'panels') { o.material = panelMat; panelMeshes.push(o); }
+  });
+  scene.add(model);
+  const box = new THREE.Box3().setFromObject(model);
+  box.getCenter(center);
+  size = box.getSize(new THREE.Vector3()).length();
+  controls.target.copy(center);
+  setView('angle');
+  apply();
+  loaderEl.remove();
+}
+
+function setView(v) {
+  const d = size * 1.45;
+  const dir = { front: [0, 0.12, 1], angle: [0.75, 0.45, 1], top: [0.3, 1.4, 0.6] }[v];
+  const vec = new THREE.Vector3(...dir).normalize().multiplyScalar(d);
+  camera.position.copy(center).add(vec);
+  camera.near = size / 100; camera.far = size * 10; camera.updateProjectionMatrix();
+  controls.update();
+}
+
+function apply() {
+  ROLES.forEach((r, i) => mats[r.key].color.set(state.colors[i]));
+  panelMeshes.forEach(m => { m.visible = state.panels !== 'off'; });
+  panelMat.color.set(state.panels === 'clear' ? '#dfeef2' : '#2a2f31');
+  panelMat.opacity = state.panels === 'clear' ? 0.12 : 0.45;
+  if (state.light === 'day') {
+    scene.environment = envTex; hemi.intensity = 0.4; sun.intensity = 1.1; scene.background.set('#e9edeb');
+  } else {
+    scene.environment = envTex; hemi.intensity = 0.15; sun.intensity = 0.6; scene.background.set('#2a2826');
+    hemi.color.set('#ffe2c0'); sun.color.set('#ffd9ad');
+  }
+  if (state.light === 'day') { hemi.color.set('#ffffff'); sun.color.set('#ffffff'); }
+  renderUI();
+}
+
+function renderUI() {
+  document.getElementById('presets').innerHTML = PRESETS.map((p, i) => `
+    ${i === 0 || PRESETS[i - 1].group !== p.group ? `<h3 class="group">${p.group}</h3>` : ''}
+    <button class="preset" data-i="${i}" aria-pressed="${state.preset === i}">
+      <span>${p.name}</span>
+      <span class="bar">${p.c.slice(0, 3).map((c, j) => `<span style="flex:${[6, 3, 1][j]};background:${c}"></span>`).join('')}</span>
+      <small>${p.note}</small>
+    </button>`).join('');
+  document.querySelectorAll('.preset').forEach(b => b.onclick = () => {
+    state.preset = +b.dataset.i; state.colors = PRESETS[state.preset].c.slice(); apply();
+  });
+  document.getElementById('roles').innerHTML = ROLES.map((r, i) => `
+    <div class="role">
+      <input type="color" id="pick-${i}" value="${state.colors[i]}" aria-label="${r.name}">
+      <span><b>${r.name}</b><small>${r.parts}</small></span>
+      <input type="text" id="hex-${i}" value="${state.colors[i]}" maxlength="7" aria-label="${r.name} Hex">
+    </div>`).join('');
+  ROLES.forEach((r, i) => {
+    document.getElementById(`pick-${i}`).oninput = e => setColor(i, e.target.value);
+    document.getElementById(`hex-${i}`).onchange = e => {
+      let v = e.target.value.trim(); if (!v.startsWith('#')) v = '#' + v;
+      if (/^#[0-9a-f]{6}$/i.test(v)) setColor(i, v.toLowerCase());
+    };
+  });
+  document.querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b =>
+    b.setAttribute('aria-pressed', b.dataset.val === state[g.dataset.key])));
+}
+
+function setColor(i, v) {
+  state.colors[i] = v; state.preset = -1;
+  mats[ROLES[i].key].color.set(v);
+  document.getElementById(`pick-${i}`).value = v;
+  document.getElementById(`hex-${i}`).value = v;
+  document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', 'false'));
+}
+
+document.querySelectorAll('.seg').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  state[g.dataset.key] = b.dataset.val; apply();
+}));
+['front', 'angle', 'top'].forEach(v => document.getElementById(`view-${v}`).onclick = () => setView(v));
+
+function loop() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== Math.floor(w * renderer.getPixelRatio()) || canvas.height !== Math.floor(h * renderer.getPixelRatio())) {
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+apply();
+loop();
+</script>
+</body>
+</html>
