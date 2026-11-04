@@ -88,11 +88,18 @@
   body.shared { grid-template-columns: 1fr; grid-template-rows: 1fr; }
   body.shared aside { display: none; }
   #share-card {
-    position: absolute; left: 16px; bottom: 16px; max-width: calc(100% - 32px); width: 280px;
+    position: absolute; left: 16px; bottom: 16px; max-width: calc(100% - 32px); width: 300px;
     background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
     box-shadow: 0 8px 30px rgba(0,0,0,.08); display: grid; gap: 10px;
   }
   #share-card h1 { font-size: 18px; }
+  #share-card #view-section { border-top: 1px solid var(--line); padding-top: 10px; }
+  @media (max-width: 800px) {
+    /* Phones: the card sits below the model instead of covering it */
+    body.shared main { display: flex; flex-direction: column; }
+    body.shared canvas { flex: 1; min-height: 0; }
+    body.shared #share-card { position: static; width: auto; max-width: none; margin: 0 12px 12px; }
+  }
   #share-card .bar { width: 100%; height: 22px; }
   .sw-row { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
   .sw-row i { width: 22px; height: 22px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
@@ -134,7 +141,7 @@
     <div class="roles" id="roles"></div>
   </section>
 
-  <section>
+  <section id="view-section">
     <h2>View</h2>
     <div class="row" style="margin-bottom:8px">Panels
       <span class="seg" data-key="panels">
@@ -426,6 +433,7 @@ if (sharedColors) {
   const card = document.getElementById('share-card');
   card.innerHTML = `<h1>${name}</h1>` + ROLES.map((r, i) =>
     `<div class="sw-row"><i style="background:${sharedColors[i]}"></i><span>${r.name}</span><code>${sharedColors[i].toUpperCase()}</code></div>`).join('');
+  card.append(document.getElementById('view-section')); // panel tint, light and camera controls
   card.hidden = false;
 }
 

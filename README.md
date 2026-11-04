@@ -6,7 +6,7 @@ A browser-based color preview for the Voron 2.4. Pick a palette or set your own 
 
 ## Pages
 
-- **3D preview** (`index.html`): palette presets, free hex colors for each role (primary, accent, chains, frame), panel and lighting options, front/angle/top views, favorites (heart a preset or your current colors; saved in localStorage), and share links: every palette can be shared as a URL (`?palette=rrggbb-rrggbb-rrggbb-rrggbb`, colors in role order) that opens a view with only the model and that palette. The model is only downloaded on request, with a progress bar, and kept in the browser cache for later visits.
+- **3D preview** (`index.html`): palette presets, free hex colors for each role (primary, accent, chains, frame), panel and lighting options, front/angle/top views, favorites (heart a preset or your current colors; saved in localStorage), and share links: every palette can be shared as a URL (`?palette=rrggbb-rrggbb-rrggbb-rrggbb`, colors in role order) that opens a view with only the model, that palette and the view controls (panels, light, camera). The model is only downloaded on request, with a progress bar, and kept in the browser cache for later visits.
 - **Palette board** (`palettes.html`): a 2D swatch board of three-color palettes around a mint base, with a simplified front view of the printer.
 
 ## Model
